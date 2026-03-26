@@ -49,7 +49,7 @@ export const ContentCard: React.FC<Props> = ({ item, onClick, isProAuthenticated
         
         <div className="absolute top-3 right-3">
           <div className="bg-black/80 backdrop-blur-md text-white px-2.5 py-1 rounded-md text-[10px] font-black tracking-widest border border-white/10">
-            VERCEL
+            {item.category}
           </div>
         </div>
       </div>

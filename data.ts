@@ -8,7 +8,7 @@ export const AI_CONTENTS: ContentItem[] = [
     description: "기획, 구조, 가사, 프롬프트, 앨범아트 제작까지 한 번에 해결하는 통합 웹빌더입니다.",
     url: 'https://suno-studio-pro-kpop.vercel.app',
     isPro: true,
-    posterUrl: 'https://picsum.photos/seed/seo/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/Suno%20Studio%20Pro%20V1.6.png?raw=true'
   },
   {
     id: '2',
@@ -17,52 +17,52 @@ export const AI_CONTENTS: ContentItem[] = [
     description: "장르를 선택하면 AI가 제목, 가사, 그리고 스타일 프롬프트까지 자동생성(5개)",
     url: 'https://music-idea-bank.vercel.app/',
     isPro: true,
-    posterUrl: 'https://picsum.photos/seed/scraper/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/music-idea.png?raw=true'
   },
   {
     id: '3',
     category: 'VERCEL',
-    title: '프로페셔널 오디오 마스터링 의 혁신',
+    title: '프로페셔널 오디오 마스터링',
     description: "드래그 앤 드롭으로 지연 시간 없이 즉시 마스터링됩니다.",
     url: 'https://audio-mastering-ten.vercel.app/',
     isPro: false,
-    posterUrl: 'https://picsum.photos/seed/scraper-basic/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/audio-mastering.png?raw=true'
   },
   {
     id: '4',
-    category: 'AI STUDIO',
-    title: '스펙트럼 스튜디오 Beta버전',
+    category: 'VERCEL',
+    title: '스펙트럼 스튜디오',
     description: "플레이리스트 제작도구, 스펙트럼과 효과가 들어간 MP4영상",
     url: 'https://spectrum-studio-3soh.vercel.app/',
     isPro: true,
-    posterUrl: 'https://picsum.photos/seed/stock/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/spectrum-studio.png?raw=true'
   },
   {
     id: '5',
-    category: 'AI STUDIO',
-    title: 'AI 커버곡 메이커',
-    description: "원하는 목소리로 기존 곡을 커버해보세요. AI가 자연스러운 보컬 합성을 도와줍니다.",
-    url: '#',
+    category: 'VERCEL',
+    title: 'Spin CD Maker',
+    description: "움직이는 cd 이미지 만들어주는 앱",
+    url: 'https://spin-cd-maker.vercel.app/',
     isPro: true,
     posterUrl: 'https://picsum.photos/seed/cover/800/450'
   },
   {
     id: '6',
     category: 'VERCEL',
-    title: '보컬 리무버 PRO',
-    description: "음원에서 보컬과 반주를 깔끔하게 분리해주는 고성능 AI 도구입니다. 리믹스나 MR 제작에 최적화되어 있습니다.",
-    url: '#',
+    title: 'Suno AI 음악 생성기',
+    description: "음악파일 생성까지 올일원 자동생성, 한번에 음악파일 최대20개(총40개)생성, 플레이리스트용",
+    url: 'https://suno-auto-generation.vercel.app/',
     isPro: false,
     posterUrl: 'https://picsum.photos/seed/vocal/800/450'
   },
   {
     id: '7',
-    category: 'AI STUDIO',
+    category: 'VERCEL',
     title: '앨범아트 이미지 생성 웹빌더',
     description: "복잡한 프롬프트 없이 클릭만으로 고퀄리티 앨범 아트를 제작해보세요.",
-    url: '#',
+    url: 'https://ai-album-art-builder.vercel.app/',
     isPro: true,
-    posterUrl: 'https://ai.studio/apps/608a12c6-33d6-464c-b56e-d293bd2c68ff'
+    posterUrl: 'https://picsum.photos/seed/vocal/800/450'
   },
   {
     id: '8',
