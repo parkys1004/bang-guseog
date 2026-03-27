@@ -44,7 +44,7 @@ export const AI_CONTENTS: ContentItem[] = [
     description: "움직이는 cd 이미지 만들어주는 앱",
     url: 'https://spin-cd-maker.vercel.app/',
     isPro: true,
-    posterUrl: 'https://picsum.photos/seed/cover/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/Spin%20CD%20Maker.png?raw=true'
   },
   {
     id: '6',
@@ -53,7 +53,7 @@ export const AI_CONTENTS: ContentItem[] = [
     description: "음악파일 생성까지 올일원 자동생성, 한번에 음악파일 최대20개(총40개)생성, 플레이리스트용",
     url: 'https://suno-auto-generation.vercel.app/',
     isPro: false,
-    posterUrl: 'https://picsum.photos/seed/vocal/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/Suno%20AI%20%EC%9D%8C%EC%95%85%20%EC%83%9D%EC%84%B1%EA%B8%B0.png?raw=true'
   },
   {
     id: '7',
@@ -62,7 +62,7 @@ export const AI_CONTENTS: ContentItem[] = [
     description: "복잡한 프롬프트 없이 클릭만으로 고퀄리티 앨범 아트를 제작해보세요.",
     url: 'https://ai-album-art-builder.vercel.app/',
     isPro: true,
-    posterUrl: 'https://picsum.photos/seed/vocal/800/450'
+    posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/New%20Album%20Cover.png?raw=true'
   },
   {
     id: '8',
