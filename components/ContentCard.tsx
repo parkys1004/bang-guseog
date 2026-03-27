@@ -30,9 +30,7 @@ export const ContentCard: React.FC<Props> = ({ item, onClick, isProAuthenticated
         <img
           src={imgSrc}
           alt={item.title}
-          className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
-            item.isPro && !isProAuthenticated ? 'blur-sm grayscale-[0.5]' : ''
-          }`}
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
           onError={handleError}
         />
