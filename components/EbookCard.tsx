@@ -11,7 +11,11 @@ export const EbookCard: React.FC<Props> = ({ item, onClick }) => {
   return (
     <div 
       onClick={() => onClick(item)}
-      className="group cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className={`group cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-500 p-3 rounded-xl border transition-all ${
+        item.isPro 
+          ? 'border-amber-200/50 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/5 hover:border-amber-400 dark:hover:border-amber-700' 
+          : 'border-transparent'
+      }`}
     >
       {/* Book Cover Container */}
       <div className="relative aspect-[3/4] rounded-lg overflow-hidden mb-4 shadow-2xl transition-transform duration-500 group-hover:scale-[1.02] group-hover:-translate-y-2">

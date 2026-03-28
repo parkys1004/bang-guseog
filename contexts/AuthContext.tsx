@@ -5,19 +5,28 @@ import {
   signOut, 
   onAuthStateChanged,
   updateProfile,
+  updateEmail,
+  updatePassword,
+  deleteUser,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   User as FirebaseUser,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  linkWithPopup,
+  unlink
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 export interface User {
   id: string;
   email: string;
   name: string;
+  photoURL?: string | null;
   role: 'admin' | 'user';
   subscriptionEndDate?: string | null;
+  providerId?: string;
 }
 
 interface AuthContextType {
@@ -26,6 +35,10 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  updateProfileInfo: (name: string, photoURL?: string) => Promise<void>;
+  updateEmailAddress: (newEmail: string) => Promise<void>;
+  updatePasswordValue: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
   loading: boolean;
 }
 
@@ -63,8 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
             name: firebaseUser.displayName || '사용자',
+            photoURL: firebaseUser.photoURL,
             role,
-            subscriptionEndDate
+            subscriptionEndDate,
+            providerId: firebaseUser.providerData[0]?.providerId
           });
         } catch (error) {
           console.error("Error fetching user role:", error);
@@ -73,7 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
             name: firebaseUser.displayName || '사용자',
-            role: 'user'
+            photoURL: firebaseUser.photoURL,
+            role: 'user',
+            providerId: firebaseUser.providerData[0]?.providerId
           });
         }
       } else {
@@ -176,8 +193,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfileInfo = async (name: string, photoURL?: string) => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    
+    try {
+      await updateProfile(auth.currentUser, {
+        displayName: name,
+        photoURL: photoURL || auth.currentUser.photoURL
+      });
+
+      // Update Firestore
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        name: name,
+        photoURL: photoURL || auth.currentUser.photoURL || null
+      });
+
+      setUser(prev => prev ? { ...prev, name, photoURL: photoURL || prev.photoURL } : null);
+    } catch (error: any) {
+      console.error("Profile update error:", error);
+      throw new Error(`프로필 수정 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
+  const updateEmailAddress = async (newEmail: string) => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    
+    try {
+      await updateEmail(auth.currentUser, newEmail);
+      
+      // Update Firestore
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        email: newEmail
+      });
+
+      setUser(prev => prev ? { ...prev, email: newEmail } : null);
+    } catch (error: any) {
+      console.error("Email update error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error('보안을 위해 다시 로그인한 후 이메일을 변경해주세요.');
+      }
+      throw new Error(`이메일 변경 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
+  const updatePasswordValue = async (currentPassword: string, newPassword: string) => {
+    if (!auth.currentUser || !auth.currentUser.email) throw new Error('로그인이 필요합니다.');
+    
+    try {
+      // Re-authenticate first
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Update password
+      await updatePassword(auth.currentUser, newPassword);
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      if (error.code === 'auth/wrong-password') {
+        throw new Error('현재 비밀번호가 일치하지 않습니다.');
+      }
+      throw new Error(`비밀번호 변경 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    
+    const uid = auth.currentUser.uid;
+    
+    try {
+      // Delete from Firestore first
+      await deleteDoc(doc(db, 'users', uid));
+      
+      // Delete from Auth
+      await deleteUser(auth.currentUser);
+      
+      setUser(null);
+    } catch (error: any) {
+      console.error("Account deletion error:", error);
+      if (error.code === 'auth/requires-recent-login') {
+        throw new Error('보안을 위해 다시 로그인한 후 계정을 탈퇴해주세요.');
+      }
+      throw new Error(`계정 탈퇴 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, loginWithGoogle, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      signup, 
+      loginWithGoogle, 
+      logout, 
+      updateProfileInfo,
+      updateEmailAddress,
+      updatePasswordValue,
+      deleteAccount,
+      loading 
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );

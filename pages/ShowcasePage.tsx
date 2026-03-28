@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight } from 'lucide-react';
+import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight, Crown, Lock } from 'lucide-react';
 import { ContentItem, EbookItem } from '../types';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
@@ -179,12 +179,15 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-1.5 rounded-md text-[11px] font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5 ${
                   activeCategory === cat 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                    ? (cat === '전자책' 
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-lg shadow-amber-500/20' 
+                        : 'bg-blue-600 text-white shadow-lg shadow-blue-500/20')
                     : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
+                {cat === '전자책' && <Crown className={`w-3 h-3 ${activeCategory === cat ? 'text-white' : 'text-amber-500'}`} />}
                 {cat}
               </button>
             ))}
@@ -196,12 +199,15 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <button
                 key={vis}
                 onClick={() => setActiveVisibility(vis)}
-                className={`px-4 py-1.5 rounded-md text-[11px] font-bold transition-all ${
+                className={`px-4 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5 ${
                   activeVisibility === vis 
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
+                    ? (vis === '회원전용'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-lg shadow-amber-500/20'
+                        : 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20')
                     : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
+                {vis === '회원전용' && <Lock className={`w-3 h-3 ${activeVisibility === vis ? 'text-white' : 'text-amber-500'}`} />}
                 {vis}
               </button>
             ))}

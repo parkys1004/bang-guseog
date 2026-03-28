@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -10,6 +10,7 @@ import { FAQPage } from './pages/FAQPage';
 import { RecommendedSitesPage } from './pages/RecommendedSitesPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
+import { SettingsModal } from './components/SettingsModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
@@ -37,6 +38,7 @@ const AppContent: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isProAuthenticated, setIsProAuthenticated] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
@@ -240,41 +242,54 @@ const AppContent: React.FC = () => {
                  {isProAuthenticated ? '회원전용 사용중' : '회원전용 (구독필요)'}
                </button>
 
-               {/* User Auth Buttons */}
-               {user ? (
-                 <div className="hidden md:flex items-center gap-2">
-                   {user.role === 'admin' && (
-                     <button
-                       onClick={() => setActivePage('admin-dashboard')}
-                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'admin-dashboard' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}`}
-                     >
-                       관리자
-                     </button>
-                   )}
-                   <button
-                     onClick={() => setActivePage('user-dashboard')}
-                     className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'user-dashboard' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : (isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}
-                   >
-                     <UserIcon className="w-4 h-4" />
-                     {user.name}님
-                     {unreadCount > 0 && (
-                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white dark:border-[#020408]">
-                         {unreadCount}
-                       </span>
-                     )}
-                   </button>
-                   <button
-                     onClick={() => {
-                       logout();
-                       setActivePage('showcase');
-                     }}
-                     className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800 hover:text-red-400' : 'text-gray-500 hover:bg-gray-100 hover:text-red-500'}`}
-                     title="로그아웃"
-                   >
-                     <LogOut className="w-5 h-5" />
-                   </button>
-                 </div>
-               ) : (
+                {/* User Auth Buttons */}
+                {user ? (
+                  <div className="hidden md:flex items-center gap-2">
+                    {user.role === 'admin' && (
+                      <button
+                        onClick={() => setActivePage('admin-dashboard')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'admin-dashboard' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}`}
+                      >
+                        관리자
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setActivePage('user-dashboard')}
+                      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'user-dashboard' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : (isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-black overflow-hidden">
+                        {user.photoURL ? (
+                          <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                        ) : (
+                          user.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      {user.name}님
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white dark:border-[#020408]">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setIsSettingsModalOpen(true)}
+                      className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-black'}`}
+                      title="계정 설정"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setActivePage('showcase');
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800 hover:text-red-400' : 'text-gray-500 hover:bg-gray-100 hover:text-red-500'}`}
+                      title="로그아웃"
+                    >
+                      <LogOut className="w-5 h-5" />
+                    </button>
+                  </div>
+                ) : (
                  <button
                    onClick={() => setIsAuthModalOpen(true)}
                    className={`hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
@@ -327,13 +342,29 @@ const AppContent: React.FC = () => {
                     }}
                     className={`relative flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold ${activePage === 'user-dashboard' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : (isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700')}`}
                   >
-                    <UserIcon className="w-5 h-5" />
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-black overflow-hidden">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                      ) : (
+                        user.name.charAt(0).toUpperCase()
+                      )}
+                    </div>
                     {user.name}님 마이페이지
                     {unreadCount > 0 && (
                       <span className="absolute top-2 right-4 w-5 h-5 bg-red-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-white dark:border-gray-900">
                         {unreadCount}
                       </span>
                     )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsSettingsModalOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'}`}
+                  >
+                    <Settings className="w-5 h-5" />
+                    계정 설정
                   </button>
                   {user.role === 'admin' && (
                     <button
@@ -417,6 +448,11 @@ const AppContent: React.FC = () => {
       <AuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+      />
+
+      <SettingsModal 
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
       />
 
       {/* Footer */}
