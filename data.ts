@@ -81,8 +81,8 @@ export const EBOOK_CONTENTS: EbookItem[] = [
     title: '당신의 첫 전자책, AI와 함께 시작해요!',
     description: '글쓰기가 두려운 당신을 위한 AI 활용 전자책 제작 완벽 가이드! 이 책은 아이디어 발굴부터 목차 구성, 초안 작...',
     coverUrl: 'https://picsum.photos/seed/ebook1/400/600',
-    isPro: false,
-    isFree: true,
+    isPro: true,
+    isFree: false,
     url: '#'
   },
   {
@@ -99,8 +99,8 @@ export const EBOOK_CONTENTS: EbookItem[] = [
     title: 'MCP 실용 매뉴얼 - 인터랙티브 가이드',
     description: 'MCP의 핵심 개념과 아키텍처를 설명하고, Python 기반 서버 구축부터 Claude AI 연동, 보안 설정까지의 ...',
     coverUrl: 'https://picsum.photos/seed/ebook3/400/600',
-    isPro: false,
-    isFree: true,
+    isPro: true,
+    isFree: false,
     url: '#'
   },
   {
@@ -108,8 +108,8 @@ export const EBOOK_CONTENTS: EbookItem[] = [
     title: '구글이 사랑하는 블로그 SEO 최적화 A to Z',
     description: '구글 상위 노출을 위한 SEO 최적화 가이드입니다. 최신 알고리즘의 핵심은 E-E-A-T(경험·전문성·권위·신뢰)...',
     coverUrl: 'https://picsum.photos/seed/ebook4/400/600',
-    isPro: false,
-    isFree: true,
+    isPro: true,
+    isFree: false,
     url: '#'
   }
 ];

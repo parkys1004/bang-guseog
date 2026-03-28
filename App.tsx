@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -8,17 +8,110 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { RecommendedSitesPage } from './pages/RecommendedSitesPage';
-import { PasswordModal } from './components/PasswordModal';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { UserDashboard } from './pages/UserDashboard';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
+import { auth, db } from './firebase';
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended';
+const testConnection = async () => {
+  try {
+    await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log('Firestore connection test successful');
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration. The client is offline.");
+    }
+    // Skip logging for other errors, as this is simply a connection test.
+  }
+};
 
-const App: React.FC = () => {
+testConnection();
+
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'user-dashboard' | 'admin-dashboard';
+
+const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isProAuthenticated, setIsProAuthenticated] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user, logout } = useAuth();
+
+  // Check user subscription for PRO access
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        setIsProAuthenticated(true);
+      } else if (user.subscriptionEndDate) {
+        const endDate = new Date(user.subscriptionEndDate);
+        const now = new Date();
+        if (endDate >= now) {
+          setIsProAuthenticated(true);
+        } else {
+          setIsProAuthenticated(false);
+        }
+      } else {
+        // If subscriptionEndDate is null, it means no access (or unlimited? Let's assume unlimited if we want, but usually it means no access. Wait, earlier I set it to null. Let's assume null means unlimited for now, or maybe null means no PRO access. Let's make null mean NO access, and they need a date. Actually, let's make null mean unlimited for backward compatibility, or no access? Let's make null mean unlimited access for now, or just require a date. Let's require a date for PRO access.)
+        // Actually, let's make null mean NO access.
+        setIsProAuthenticated(false);
+      }
+    } else {
+      setIsProAuthenticated(false);
+    }
+  }, [user]);
+
+  // Fetch unread messages count
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    console.log('Fetching unread count for user:', user.id);
+    console.log('Current Auth UID:', auth.currentUser?.uid);
+    console.log('Current Auth Email:', auth.currentUser?.email);
+
+    const q = query(
+      collection(db, 'messages'),
+      where('receiverId', '==', user.id)
+    );
+
+    const handleFirestoreError = (error: unknown, operationType: string, path: string | null) => {
+      const errInfo = {
+        error: error instanceof Error ? error.message : String(error),
+        authInfo: {
+          userId: auth.currentUser?.uid,
+          email: auth.currentUser?.email,
+          emailVerified: auth.currentUser?.emailVerified,
+          isAnonymous: auth.currentUser?.isAnonymous,
+          tenantId: auth.currentUser?.tenantId,
+          providerInfo: auth.currentUser?.providerData.map(provider => ({
+            providerId: provider.providerId,
+            displayName: provider.displayName,
+            email: provider.email,
+            photoUrl: provider.photoURL
+          })) || []
+        },
+        operationType,
+        path
+      };
+      console.error('Firestore Error: ', JSON.stringify(errInfo));
+      throw new Error(JSON.stringify(errInfo));
+    };
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unread = snapshot.docs.filter(doc => !doc.data().isRead).length;
+      setUnreadCount(unread);
+    }, (error) => {
+      handleFirestoreError(error, 'get', 'messages');
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   // Sync dark mode with document class for Tailwind dark: variants
   useEffect(() => {
@@ -50,26 +143,36 @@ const App: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenAuth = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+    } else if (!isProAuthenticated) {
+      alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다. 관리자에게 문의하세요.');
+    }
+  };
+
   const renderContent = () => {
     switch (activePage) {
       case 'showcase': return (
         <ShowcasePage 
           isProAuthenticated={isProAuthenticated} 
-          onOpenAuth={() => setIsPasswordModalOpen(true)} 
+          onOpenAuth={handleOpenAuth} 
           onNavigate={setActivePage}
         />
       );
-      case 'ebook': return <EbookPage />;
-      case 'prompt': return <PromptPage />;
+      case 'ebook': return <EbookPage isProAuthenticated={isProAuthenticated} onOpenAuth={handleOpenAuth} />;
+      case 'prompt': return <PromptPage isProAuthenticated={isProAuthenticated} onOpenAuth={handleOpenAuth} />;
       case 'service': return <ServicePage />;
       case 'about': return <AboutPage />;
       case 'contact': return <ContactPage />;
       case 'faq': return <FAQPage />;
       case 'recommended': return <RecommendedSitesPage />;
+      case 'user-dashboard': return <UserDashboard />;
+      case 'admin-dashboard': return <AdminDashboard />;
       default: return (
         <ShowcasePage 
           isProAuthenticated={isProAuthenticated} 
-          onOpenAuth={() => setIsPasswordModalOpen(true)} 
+          onOpenAuth={handleOpenAuth} 
           onNavigate={setActivePage}
         />
       );
@@ -90,11 +193,11 @@ const App: React.FC = () => {
       
       {/* Top Navigation Bar */}
       <nav className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-300 ${isDarkMode ? 'bg-[#020408]/80 border-gray-800' : 'bg-white/80 border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div 
-              className="flex items-center gap-2 cursor-pointer" 
+              className="flex items-center gap-2 cursor-pointer shrink-0" 
               onClick={() => setActivePage('showcase')}
             >
               <div className="bg-black dark:bg-white text-white dark:text-black p-2 rounded-lg transition-colors">
@@ -104,12 +207,12 @@ const App: React.FC = () => {
             </div>
 
             {/* Desktop Nav Links */}
-            <div className={`hidden md:flex items-center gap-8 text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+            <div className={`hidden lg:flex items-center justify-center flex-1 px-8 gap-6 xl:gap-10 text-sm font-bold transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                {navItems.map((item) => (
                  <button
                    key={item.id}
                    onClick={() => setActivePage(item.id)}
-                   className={`transition-colors ${activePage === item.id ? (isDarkMode ? 'text-white' : 'text-black') : (isDarkMode ? 'hover:text-white' : 'hover:text-black')}`}
+                   className={`transition-colors whitespace-nowrap ${activePage === item.id ? (isDarkMode ? 'text-white' : 'text-black') : (isDarkMode ? 'hover:text-white' : 'hover:text-black')}`}
                  >
                    {item.label}
                  </button>
@@ -117,19 +220,73 @@ const App: React.FC = () => {
             </div>
 
             {/* Icons / Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                {/* PRO Auth Button */}
                <button
-                 onClick={() => setIsPasswordModalOpen(true)}
-                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                 onClick={() => {
+                   if (!user) {
+                     setIsAuthModalOpen(true);
+                   } else if (!isProAuthenticated) {
+                     alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다.');
+                   }
+                 }}
+                 className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                    isProAuthenticated 
                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800' 
                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent'
                  }`}
                >
                  {isProAuthenticated ? <ShieldCheck className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                 {isProAuthenticated ? 'PRO 인증됨' : 'PRO 인증'}
+                 {isProAuthenticated ? '회원전용 사용중' : '회원전용 (구독필요)'}
                </button>
+
+               {/* User Auth Buttons */}
+               {user ? (
+                 <div className="hidden md:flex items-center gap-2">
+                   {user.role === 'admin' && (
+                     <button
+                       onClick={() => setActivePage('admin-dashboard')}
+                       className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'admin-dashboard' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}`}
+                     >
+                       관리자
+                     </button>
+                   )}
+                   <button
+                     onClick={() => setActivePage('user-dashboard')}
+                     className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'user-dashboard' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : (isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')}`}
+                   >
+                     <UserIcon className="w-4 h-4" />
+                     {user.name}님
+                     {unreadCount > 0 && (
+                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white dark:border-[#020408]">
+                         {unreadCount}
+                       </span>
+                     )}
+                   </button>
+                   <button
+                     onClick={() => {
+                       logout();
+                       setActivePage('showcase');
+                     }}
+                     className={`p-1.5 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:bg-gray-800 hover:text-red-400' : 'text-gray-500 hover:bg-gray-100 hover:text-red-500'}`}
+                     title="로그아웃"
+                   >
+                     <LogOut className="w-5 h-5" />
+                   </button>
+                 </div>
+               ) : (
+                 <button
+                   onClick={() => setIsAuthModalOpen(true)}
+                   className={`hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                     isDarkMode 
+                       ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                       : 'bg-purple-600 hover:bg-purple-700 text-white'
+                   }`}
+                 >
+                   <UserIcon className="w-4 h-4" />
+                   로그인
+                 </button>
+               )}
 
                {/* Theme Toggle Button */}
                <button
@@ -160,10 +317,69 @@ const App: React.FC = () => {
         {isMobileMenuOpen && (
           <div className={`md:hidden border-t absolute w-full left-0 shadow-lg transition-colors ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-100'}`}>
             <div className="flex flex-col p-4 space-y-4">
+              {/* Mobile User Auth */}
+              {user ? (
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setActivePage('user-dashboard');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`relative flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold ${activePage === 'user-dashboard' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : (isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700')}`}
+                  >
+                    <UserIcon className="w-5 h-5" />
+                    {user.name}님 마이페이지
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-4 w-5 h-5 bg-red-500 text-white text-xs flex items-center justify-center rounded-full border-2 border-white dark:border-gray-900">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {user.role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setActivePage('admin-dashboard');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold ${activePage === 'admin-dashboard' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : (isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700')}`}
+                    >
+                      <ShieldCheck className="w-5 h-5" />
+                      관리자 대시보드
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      logout();
+                      setActivePage('showcase');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all ${isDarkMode ? 'bg-red-900/30 text-red-400' : 'bg-red-50 text-red-500'}`}
+                  >
+                    <LogOut className="w-5 h-5" />
+                    로그아웃
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all bg-purple-600 text-white hover:bg-purple-700"
+                >
+                  <UserIcon className="w-5 h-5" />
+                  로그인 / 회원가입
+                </button>
+              )}
+
               {/* Mobile PRO Auth */}
               <button
                 onClick={() => {
-                  setIsPasswordModalOpen(true);
+                  if (!user) {
+                    setIsAuthModalOpen(true);
+                  } else if (!isProAuthenticated) {
+                    alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다.');
+                  }
                   setIsMobileMenuOpen(false);
                 }}
                 className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all ${
@@ -173,7 +389,7 @@ const App: React.FC = () => {
                 }`}
               >
                 {isProAuthenticated ? <ShieldCheck className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-                {isProAuthenticated ? 'PRO 인증됨' : 'PRO 인증하기'}
+                {isProAuthenticated ? '회원전용 사용중' : '회원전용 (구독필요)'}
               </button>
 
               {navItems.map((item) => (
@@ -198,10 +414,9 @@ const App: React.FC = () => {
         {renderContent()}
       </div>
 
-      <PasswordModal 
-        isOpen={isPasswordModalOpen}
-        onClose={() => setIsPasswordModalOpen(false)}
-        onSuccess={() => setIsProAuthenticated(true)}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
 
       {/* Footer */}
@@ -224,6 +439,14 @@ const App: React.FC = () => {
         <ArrowUp className="w-6 h-6" />
       </button>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

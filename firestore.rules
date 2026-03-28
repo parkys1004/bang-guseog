@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - role: string (required, 'admin' or 'user')
+    //   - subscriptionEndDate: string (optional, ISO 8601 or 'unlimited')
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // Collection: messages
+    // Document ID: {messageId}
+    // Fields:
+    //   - senderId: string (required)
+    //   - receiverId: string (required)
+    //   - title: string (required)
+    //   - content: string (required)
+    //   - isRead: boolean (required)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // ===============================================================
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "aimaster1004@gmail.com" || 
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr == null || (dateStr is string &&
+        dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$"));
+    }
+
+    // User validation
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['admin', 'user'] &&
+             isValidDateString(data.createdAt) &&
+             (!('subscriptionEndDate' in data) || data.subscriptionEndDate == null || data.subscriptionEndDate is string);
+    }
+
+    // Message validation
+    function isValidMessage(data) {
+      return data.keys().hasAll(['senderId', 'receiverId', 'title', 'content', 'isRead', 'createdAt']) &&
+             data.senderId is string &&
+             data.receiverId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
+             data.isRead is bool &&
+             isValidDateString(data.createdAt);
+    }
+
+    // User rules
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && request.resource.data.role == resource.data.role) || 
+        isAdmin()
+      ) && isValidUser(request.resource.data);
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+
+    // Message rules
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.receiverId == request.auth.uid || 
+        resource.data.senderId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        request.resource.data.senderId == request.auth.uid
+      ) && isValidMessage(request.resource.data);
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (resource.data.receiverId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']))
+      ) && isValidMessage(request.resource.data);
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        resource.data.receiverId == request.auth.uid
+      );
+    }
+  }
+}

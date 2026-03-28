@@ -2,9 +2,19 @@ import React from 'react';
 import { EbookCard } from '../components/EbookCard';
 import { EBOOK_CONTENTS } from '../data';
 import { EbookItem } from '../types';
+import { Crown } from 'lucide-react';
 
-export const EbookPage: React.FC = () => {
+interface Props {
+  isProAuthenticated: boolean;
+  onOpenAuth: () => void;
+}
+
+export const EbookPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) => {
   const handleCardClick = (item: EbookItem) => {
+    if (item.isPro && !isProAuthenticated) {
+      onOpenAuth();
+      return;
+    }
     window.open(item.url, '_blank');
   };
 
@@ -12,7 +22,10 @@ export const EbookPage: React.FC = () => {
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 animate-in fade-in duration-500">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-blue-600 dark:text-blue-500 font-bold tracking-wide uppercase text-sm mb-3">E-Book Collection</h2>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest mb-6 border border-amber-200 dark:border-amber-800 animate-bounce">
+            <Crown className="w-3.5 h-3.5" />
+            <span>Premium Member Only</span>
+          </div>
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 leading-tight transition-colors">
             AI 음악 제작의 모든 것<br />
             전문가의 노하우를 담은 전자책
