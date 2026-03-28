@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
+import { PromptPage } from './pages/PromptPage';
 import { ServicePage } from './pages/ServicePage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
@@ -9,7 +10,7 @@ import { FAQPage } from './pages/FAQPage';
 import { RecommendedSitesPage } from './pages/RecommendedSitesPage';
 import { PasswordModal } from './components/PasswordModal';
 
-type Page = 'showcase' | 'ebook' | 'service' | 'about' | 'contact' | 'faq' | 'recommended';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended';
 
 const App: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
@@ -58,6 +59,7 @@ const App: React.FC = () => {
         />
       );
       case 'ebook': return <EbookPage />;
+      case 'prompt': return <PromptPage />;
       case 'service': return <ServicePage />;
       case 'about': return <AboutPage />;
       case 'contact': return <ContactPage />;
@@ -75,6 +77,7 @@ const App: React.FC = () => {
   const navItems: { id: Page; label: string }[] = [
     { id: 'showcase', label: '웹빌더앱' },
     { id: 'ebook', label: '전자책' },
+    { id: 'prompt', label: '프롬프트' },
     { id: 'service', label: '그외 자료' },
     { id: 'recommended', label: '추천사이트' },
     { id: 'faq', label: 'FAQ' },
