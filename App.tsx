@@ -15,6 +15,7 @@ import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { motion, AnimatePresence } from 'motion/react';
 
 const testConnection = async () => {
   try {
@@ -442,7 +443,17 @@ const AppContent: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1">
-        {renderContent()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activePage}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <AuthModal 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenTool, Smartphone, Globe, BarChart, Rocket, Shield, ExternalLink } from 'lucide-react';
+import { Music, ExternalLink, Sparkles, Zap, Video, DollarSign } from 'lucide-react';
 
 const ServiceCard: React.FC<{ title: string; desc: string; icon: React.ReactNode; url?: string }> = ({ title, desc, icon, url }) => (
   <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
@@ -16,7 +16,7 @@ const ServiceCard: React.FC<{ title: string; desc: string; icon: React.ReactNode
           href={url} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+          className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-all shadow-md shadow-blue-500/10"
         >
           바로가기 <ExternalLink className="w-4 h-4" />
         </a>
@@ -27,40 +27,34 @@ const ServiceCard: React.FC<{ title: string; desc: string; icon: React.ReactNode
 
 export const servicesData = [
   {
-    icon: <Globe className="w-7 h-7" />,
-    title: "웹 사이트 구축",
-    desc: "반응형 웹 디자인부터 CMS 연동까지, 브랜드 아이덴티티에 최적화된 기업 및 서비스 웹사이트를 제작합니다.",
-    url: "#"
+    icon: <Music className="w-7 h-7" />,
+    title: "AI 음악 수익화 전략",
+    desc: "Suno와 AI 도구를 활용하여 제작한 음악으로 수익을 창출하는 구체적인 방법과 유통 전략을 제시합니다.",
+    url: "https://suno-ai-biz-2026-a.vercel.app/"
   },
   {
-    icon: <Smartphone className="w-7 h-7" />,
-    title: "모바일 앱 개발",
-    desc: "iOS 및 Android 네이티브 앱부터 크로스 플랫폼(Flutter, React Native)까지, 사용자 중심의 모바일 경험을 제공합니다.",
-    url: "#"
+    icon: <Sparkles className="w-7 h-7" />,
+    title: "Suno v5 Prompt Lab Pro",
+    desc: "40가지 장르 x 각 6개 프롬프트 (총 240세트)를 제공하는 전문가용 프롬프트 라이브러리입니다.",
+    url: "https://v0-prompt-lab-pro-mvt4.vercel.app/"
   },
   {
-    icon: <PenTool className="w-7 h-7" />,
-    title: "UI/UX 디자인",
-    desc: "사용자 조사를 기반으로 직관적이고 매력적인 인터페이스를 설계하여 고객의 이탈률을 줄이고 전환율을 높입니다.",
-    url: "#"
+    icon: <Zap className="w-7 h-7" />,
+    title: "Suno v5 가사 치트키",
+    desc: "v5의 향상된 구조 파악과 SFX 능력을 200% 활용하는 가사 치트키 가이드입니다.",
+    url: "https://suno-lyrics-cheat-key.vercel.app/"
   },
   {
-    icon: <Rocket className="w-7 h-7" />,
-    title: "SaaS 제품 개발",
-    desc: "복잡한 비즈니스 로직을 단순화하고, 확장 가능한 아키텍처를 기반으로 안정적인 B2B/B2C SaaS 제품을 구축합니다.",
-    url: "#"
+    icon: <Video className="w-7 h-7" />,
+    title: "뮤직비디오 제작 도구 비교",
+    desc: "Kling O1, Runway Gen-3, Google Veo 등 주요 AI 비디오 모델의 성능을 비교 분석한 자료입니다.",
+    url: "https://v0-ai-video-model-battle-s9wm.vercel.app/"
   },
   {
-    icon: <BarChart className="w-7 h-7" />,
-    title: "데이터 시각화 & 대시보드",
-    desc: "방대한 데이터를 한눈에 파악할 수 있는 직관적인 대시보드를 설계하여 의사결정을 돕는 인사이트를 제공합니다.",
-    url: "#"
-  },
-  {
-    icon: <Shield className="w-7 h-7" />,
-    title: "유지보수 & 운영",
-    desc: "안정적인 서비스 운영을 위한 서버 관리, 보안 업데이트, 성능 최적화 등 지속적인 기술 지원을 약속합니다.",
-    url: "#"
+    icon: <DollarSign className="w-7 h-7" />,
+    title: "DistroKid 2026 기본가이드",
+    desc: "'아티스트 중심' 로열티 구조와 AI 기술 규제 시대, 독립 아티스트의 수익 극대화를 위한 DistroKid 활용 전략의 모든 것.",
+    url: "https://distro-kid-guide-pro.vercel.app/"
   }
 ];
 

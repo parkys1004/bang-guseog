@@ -78,9 +78,9 @@ export const AI_CONTENTS: ContentItem[] = [
 export const EBOOK_CONTENTS: EbookItem[] = [
   {
     id: 'eb1',
-    title: '당신의 첫 전자책, AI와 함께 시작해요!',
-    description: '글쓰기가 두려운 당신을 위한 AI 활용 전자책 제작 완벽 가이드! 이 책은 아이디어 발굴부터 목차 구성, 초안 작...',
-    coverUrl: 'https://picsum.photos/seed/ebook1/400/600',
+    title: 'AI MUSIC BUSINESS!',
+    description: 'SUNO AI를 활용한 완벽한 수익 창출 시스템',
+    coverUrl: 'https://github.com/parkys1004/img/blob/main/aimusic01.jpg?raw=true',
     isPro: true,
     isFree: false,
     url: '#'

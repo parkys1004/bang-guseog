@@ -196,8 +196,8 @@ export const RecommendedSitesPage: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed flex-grow">
                       {site.description}
                     </p>
-                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800/50 text-sm font-medium text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                      사이트 방문하기
+                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800/50 text-sm font-bold text-[#2563eb] dark:text-blue-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      사이트 방문하기 <ExternalLink className="w-3.5 h-3.5" />
                     </div>
                   </a>
                 ))}
