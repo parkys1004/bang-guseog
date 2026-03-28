@@ -56,6 +56,7 @@ const App: React.FC = () => {
         <ShowcasePage 
           isProAuthenticated={isProAuthenticated} 
           onOpenAuth={() => setIsPasswordModalOpen(true)} 
+          onNavigate={setActivePage}
         />
       );
       case 'ebook': return <EbookPage />;
@@ -69,6 +70,7 @@ const App: React.FC = () => {
         <ShowcasePage 
           isProAuthenticated={isProAuthenticated} 
           onOpenAuth={() => setIsPasswordModalOpen(true)} 
+          onNavigate={setActivePage}
         />
       );
     }

@@ -25,6 +25,45 @@ const ServiceCard: React.FC<{ title: string; desc: string; icon: React.ReactNode
   </div>
 );
 
+export const servicesData = [
+  {
+    icon: <Globe className="w-7 h-7" />,
+    title: "웹 사이트 구축",
+    desc: "반응형 웹 디자인부터 CMS 연동까지, 브랜드 아이덴티티에 최적화된 기업 및 서비스 웹사이트를 제작합니다.",
+    url: "#"
+  },
+  {
+    icon: <Smartphone className="w-7 h-7" />,
+    title: "모바일 앱 개발",
+    desc: "iOS 및 Android 네이티브 앱부터 크로스 플랫폼(Flutter, React Native)까지, 사용자 중심의 모바일 경험을 제공합니다.",
+    url: "#"
+  },
+  {
+    icon: <PenTool className="w-7 h-7" />,
+    title: "UI/UX 디자인",
+    desc: "사용자 조사를 기반으로 직관적이고 매력적인 인터페이스를 설계하여 고객의 이탈률을 줄이고 전환율을 높입니다.",
+    url: "#"
+  },
+  {
+    icon: <Rocket className="w-7 h-7" />,
+    title: "SaaS 제품 개발",
+    desc: "복잡한 비즈니스 로직을 단순화하고, 확장 가능한 아키텍처를 기반으로 안정적인 B2B/B2C SaaS 제품을 구축합니다.",
+    url: "#"
+  },
+  {
+    icon: <BarChart className="w-7 h-7" />,
+    title: "데이터 시각화 & 대시보드",
+    desc: "방대한 데이터를 한눈에 파악할 수 있는 직관적인 대시보드를 설계하여 의사결정을 돕는 인사이트를 제공합니다.",
+    url: "#"
+  },
+  {
+    icon: <Shield className="w-7 h-7" />,
+    title: "유지보수 & 운영",
+    desc: "안정적인 서비스 운영을 위한 서버 관리, 보안 업데이트, 성능 최적화 등 지속적인 기술 지원을 약속합니다.",
+    url: "#"
+  }
+];
+
 export const ServicePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">
@@ -41,43 +80,16 @@ export const ServicePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <ServiceCard 
-          icon={<Globe className="w-7 h-7" />}
-          title="웹 사이트 구축"
-          desc="반응형 웹 디자인부터 CMS 연동까지, 브랜드 아이덴티티에 최적화된 기업 및 서비스 웹사이트를 제작합니다."
-          url="#"
-        />
-        <ServiceCard 
-          icon={<Smartphone className="w-7 h-7" />}
-          title="모바일 앱 개발"
-          desc="iOS 및 Android 네이티브 앱부터 크로스 플랫폼(Flutter, React Native)까지, 사용자 중심의 모바일 경험을 제공합니다."
-          url="#"
-        />
-        <ServiceCard 
-          icon={<PenTool className="w-7 h-7" />}
-          title="UI/UX 디자인"
-          desc="사용자 조사를 기반으로 직관적이고 매력적인 인터페이스를 설계하여 고객의 이탈률을 줄이고 전환율을 높입니다."
-          url="#"
-        />
-        <ServiceCard 
-          icon={<Rocket className="w-7 h-7" />}
-          title="SaaS 제품 개발"
-          desc="복잡한 비즈니스 로직을 단순화하고, 확장 가능한 아키텍처를 기반으로 안정적인 B2B/B2C SaaS 제품을 구축합니다."
-          url="#"
-        />
-        <ServiceCard 
-          icon={<BarChart className="w-7 h-7" />}
-          title="데이터 시각화 & 대시보드"
-          desc="방대한 데이터를 한눈에 파악할 수 있는 직관적인 대시보드를 설계하여 의사결정을 돕는 인사이트를 제공합니다."
-          url="#"
-        />
-        <ServiceCard 
-          icon={<Shield className="w-7 h-7" />}
-          title="유지보수 & 운영"
-          desc="안정적인 서비스 운영을 위한 서버 관리, 보안 업데이트, 성능 최적화 등 지속적인 기술 지원을 약속합니다."
-          url="#"
-        />
-      </div>
+          {servicesData.map((service, index) => (
+            <ServiceCard 
+              key={index}
+              icon={service.icon}
+              title={service.title}
+              desc={service.desc}
+              url={service.url}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

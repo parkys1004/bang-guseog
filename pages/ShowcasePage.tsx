@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { Monitor, Search, ChevronDown, BookOpen } from 'lucide-react';
+import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight } from 'lucide-react';
 import { ContentItem, EbookItem } from '../types';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
+import { servicesData } from './ServicePage';
+import { recommendedSites } from './RecommendedSitesPage';
 import { ContentCard } from '../components/ContentCard';
 import { EbookCard } from '../components/EbookCard';
 
 interface Props {
   isProAuthenticated: boolean;
   onOpenAuth: () => void;
+  onNavigate: (page: any) => void;
 }
 
-export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) => {
+export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('전체');
   const [activeVisibility, setActiveVisibility] = useState('전체');
@@ -55,10 +58,103 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }
              방구석 음악만들기<br/>
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">SUNO V5 PRO</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors">
+          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors mb-10">
              AI Studio와 Suno로 시작하는 나만의 음악 제작 여정 관련 자료 포함,<br className="hidden md:block"/>
              빌더앱은 계속 업데이트됩니다.
           </p>
+
+          {/* Content Dashboard */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto mt-8">
+            {/* 빌더 앱 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-3 text-blue-600 dark:text-blue-400">
+                <Monitor className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{AI_CONTENTS.length}</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">빌더 앱</div>
+              <button 
+                onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
+              >
+                바로가기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 전자책 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-emerald-400">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{EBOOK_CONTENTS.length}</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">전자책</div>
+              <button 
+                onClick={() => onNavigate('ebook')}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-emerald-100 hover:text-emerald-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-colors"
+              >
+                바로가기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 프롬프트 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mb-3 text-purple-600 dark:text-purple-400">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">42</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">프롬프트</div>
+              <button 
+                onClick={() => onNavigate('prompt')}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-purple-900/30 dark:hover:text-purple-400 transition-colors"
+              >
+                바로가기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 그외 자료 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-3 text-indigo-600 dark:text-indigo-400">
+                <FolderOpen className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{servicesData.length}</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">그외 자료</div>
+              <button 
+                onClick={() => onNavigate('service')}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 transition-colors"
+              >
+                바로가기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 추천사이트 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-900/20 flex items-center justify-center mb-3 text-pink-600 dark:text-pink-400">
+                <Globe className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{recommendedSites.length}</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">추천사이트</div>
+              <button 
+                onClick={() => onNavigate('recommended')}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-pink-100 hover:text-pink-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-pink-900/30 dark:hover:text-pink-400 transition-colors"
+              >
+                바로가기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 업데이트 */}
+            <div className="bg-white dark:bg-[#11141d] p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col items-center justify-center hover:shadow-md transition-all group">
+              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-3 text-orange-600 dark:text-orange-400">
+                <RefreshCw className="w-5 h-5" />
+              </div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">∞</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">업데이트</div>
+              <button 
+                onClick={() => onNavigate('contact')}
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400 transition-colors"
+              >
+                문의하기 <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
       </header>
 
       {/* Filter Bar */}

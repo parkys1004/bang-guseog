@@ -39,10 +39,22 @@ const PROMPTS: PromptItem[] = [
   { id: 'p27', category: '📈 마케팅/카피', title: '랜딩페이지 헤드라인 카피', description: '웹사이트 첫 화면에서 고객의 이탈을 막는 강력한 헤드라인을 작성합니다.', prompt: '다음 서비스/제품의 랜딩페이지 최상단(Hero section)에 들어갈 강력한 헤드라인 카피 후보 5개를 작성해주세요. 고객의 페인포인트를 자극하는 버전, 혜택을 직관적으로 보여주는 버전, 호기심을 유발하는 버전을 골고루 섞어주세요. 서비스/제품: ' },
   { id: 'p28', category: '📈 마케팅/카피', title: '프로모션/이벤트 기획안', description: '매출을 끌어올릴 수 있는 시즌별 또는 게릴라 이벤트 아이디어를 기획합니다.', prompt: '다음 타겟 고객을 대상으로 한 단기 프로모션/이벤트 기획안을 작성해주세요. 이벤트 타이틀, 참여 조건, 제공할 혜택(리워드), 그리고 고객의 참여를 독려할 긴급성(Scarcity) 부여 전략을 포함해주세요. 타겟 고객 및 목적: ' },
   { id: 'p29', category: '💡 아이디어/기획', title: '앱/웹 서비스 기능 명세서', description: '새로운 IT 서비스 기획 시 필요한 핵심 기능(MVP) 리스트를 도출합니다.', prompt: '다음 아이디어를 바탕으로 앱/웹 서비스의 MVP(최소 기능 제품) 기능 명세서를 작성해주세요. 사용자(User) 관점에서 반드시 필요한 핵심 기능 5가지와, 추후 고도화 단계에서 추가할 부가 기능 3가지를 나누어 설명해주세요. 서비스 아이디어: ' },
-  { id: 'p30', category: '💡 아이디어/기획', title: 'SWOT 분석 및 전략 도출', description: '특정 비즈니스나 프로젝트의 강점, 약점, 기회, 위협을 분석합니다.', prompt: '다음 비즈니스 모델에 대한 SWOT 분석(강점, 약점, 기회, 위협)을 진행해주세요. 각 항목별로 3가지씩 요인을 도출하고, 마지막에 강점을 활용해 기회를 잡는 SO 전략과 약점을 보완해 위협을 피하는 WT 전략을 각각 1개씩 제안해주세요. 비즈니스 모델: ' }
+  { id: 'p30', category: '💡 아이디어/기획', title: 'SWOT 분석 및 전략 도출', description: '특정 비즈니스나 프로젝트의 강점, 약점, 기회, 위협을 분석합니다.', prompt: '다음 비즈니스 모델에 대한 SWOT 분석(강점, 약점, 기회, 위협)을 진행해주세요. 각 항목별로 3가지씩 요인을 도출하고, 마지막에 강점을 활용해 기회를 잡는 SO 전략과 약점을 보완해 위협을 피하는 WT 전략을 각각 1개씩 제안해주세요. 비즈니스 모델: ' },
+  { id: 'p31', category: '🎵 음악/가사', title: '올인원 AI 음악 기획', description: '주제와 장르만 입력하면 제목, 가사, AI 음악 생성용 영문 프롬프트를 한 번에 만들어줍니다.', prompt: '다음 주제와 장르를 바탕으로 1. 매력적인 곡 제목, 2. [1절-코러스-2절-코러스-아웃트로] 구조의 가사, 3. Suno/Udio 등 AI 음악 생성기에 바로 복사해 넣을 수 있는 영문 프롬프트(스타일, 악기, 보컬 톤 포함)를 작성해주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p32', category: '🎵 음악/가사', title: 'K-Pop 스타일 올인원 기획', description: 'K-Pop 특유의 영어가 섞인 가사와 트렌디한 비트 프롬프트를 생성합니다.', prompt: 'K-Pop 아이돌 그룹의 신곡을 기획합니다. 다음 주제와 장르를 바탕으로 1. 트렌디한 곡 제목, 2. 한국어와 영어가 자연스럽게 섞인 랩/보컬 가사, 3. AI 음악 생성용 영문 프롬프트를 만들어주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p33', category: '🎵 음악/가사', title: '힙합/랩 트랙 올인원 기획', description: '펀치라인이 돋보이는 랩 가사와 힙합 비트 생성용 프롬프트를 만듭니다.', prompt: '힙합 트랙을 제작하려고 합니다. 다음 주제와 장르를 바탕으로 1. 힙합 감성의 곡 제목, 2. 라임과 펀치라인이 돋보이는 랩 가사 및 훅(Hook), 3. 비트 메이킹을 위한 AI 음악 생성용 영문 프롬프트를 작성해주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p34', category: '🎵 음악/가사', title: '어쿠스틱/인디 감성 기획', description: '서정적인 가사와 따뜻한 어쿠스틱 분위기의 음악 프롬프트를 생성합니다.', prompt: '잔잔한 인디/어쿠스틱 음악을 만듭니다. 다음 주제와 장르를 바탕으로 1. 서정적인 곡 제목, 2. 감성적이고 시적인 가사, 3. 따뜻한 분위기와 어쿠스틱 악기를 묘사하는 AI 음악 생성용 영문 프롬프트를 작성해주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p35', category: '🎵 음악/가사', title: 'EDM/댄스 페스티벌 기획', description: '빌드업과 드롭 구조가 명확한 가사와 폭발적인 EDM 프롬프트를 만듭니다.', prompt: '페스티벌에 어울리는 EDM/댄스 곡을 기획합니다. 다음 주제와 장르를 바탕으로 1. 에너제틱한 곡 제목, 2. 빌드업과 드롭(Drop) 구조가 명확한 가사, 3. 폭발적인 신스와 베이스를 묘사하는 AI 음악 생성용 영문 프롬프트를 만들어주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p36', category: '🎵 음악/가사', title: '시네마틱 OST 기획', description: '영화/드라마 OST 느낌의 스토리가 있는 가사와 웅장한 프롬프트를 생성합니다.', prompt: '영화나 드라마의 OST 같은 시네마틱 음악을 만듭니다. 다음 주제와 장르를 바탕으로 1. 극적인 곡 제목, 2. 스토리가 담긴 감동적인 가사, 3. 웅장한 오케스트레이션과 보컬을 묘사하는 AI 음악 생성용 영문 프롬프트를 작성해주세요. 주제: [여기에 주제 입력], 장르: [여기에 장르 입력]' },
+  { id: 'p37', category: '🎨 이미지/디자인', title: '시네마틱/웅장한 앨범 아트', description: '영화 포스터처럼 스케일이 크고 극적인 조명이 돋보이는 앨범 커버입니다.', prompt: 'Cinematic album cover art, dramatic lighting, epic scale, highly detailed, 8k resolution, photorealistic, moody atmosphere, trending on artstation --ar 1:1' },
+  { id: 'p38', category: '🎨 이미지/디자인', title: '로파이(Lo-Fi) 애니메이션 감성', description: '유튜브 플레이리스트 썸네일로 쓰기 좋은 따뜻하고 감성적인 애니메이션 스타일입니다.', prompt: 'Lo-fi anime style, a girl studying at a desk by the window, raining outside, cozy room, soft pastel colors, nostalgic atmosphere, 90s anime aesthetic, highly detailed --ar 1:1' },
+  { id: 'p39', category: '🎨 이미지/디자인', title: '미니멀리즘/모던 앨범 아트', description: '깔끔하고 세련된 느낌을 주는 미니멀한 디자인의 앨범 커버입니다.', prompt: 'Minimalist album cover, clean lines, abstract geometric shapes, negative space, modern typography layout, elegant, soft gradient background, high contrast --ar 1:1' },
+  { id: 'p40', category: '🎨 이미지/디자인', title: '레트로/신스웨이브 스타일', description: '80년대 레트로 감성과 네온사인이 돋보이는 신스웨이브 앨범 커버입니다.', prompt: 'Retro synthwave album cover, 1980s aesthetic, neon grid, glowing sun, palm trees, cyberpunk city background, vibrant magenta and cyan colors, vintage vhs effect --ar 1:1' },
+  { id: 'p41', category: '🎨 이미지/디자인', title: '몽환적인 초현실주의', description: '꿈속을 걷는 듯한 신비롭고 몽환적인 분위기의 앨범 커버를 생성합니다.', prompt: 'Surreal album cover art, dreamy landscape, floating islands, glowing clouds, fantasy elements, ethereal lighting, pastel color palette, magical atmosphere, highly detailed --ar 1:1' },
+  { id: 'p42', category: '🎨 이미지/디자인', title: '3D 클레이/캐릭터 아트', description: '귀엽고 트렌디한 3D 클레이 렌더링 스타일의 앨범 커버입니다.', prompt: '3D clay render album cover, cute character wearing headphones, vibrant colors, soft studio lighting, smooth plastic texture, trendy 3d illustration, octane render, 8k --ar 1:1' }
 ];
 
-const CATEGORIES = ['전체', '🎵 음악/가사', '🎬 유튜브/영상', '📝 블로그/SEO', '📈 마케팅/카피', '💡 아이디어/기획'];
+const CATEGORIES = ['전체', '🎵 음악/가사', '🎬 유튜브/영상', '📝 블로그/SEO', '📈 마케팅/카피', '💡 아이디어/기획', '🎨 이미지/디자인'];
 
 export const PromptPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -70,7 +82,7 @@ export const PromptPage: React.FC = () => {
           ChatGPT / Gemini 프롬프트 모음
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          음악, 영상 기획부터 마케팅, 아이디어 도출까지! 복사해서 바로 사용할 수 있는 30가지 실전 프롬프트입니다.
+          음악, 영상 기획부터 마케팅, 아이디어 도출까지! 복사해서 바로 사용할 수 있는 42가지 실전 프롬프트입니다.
         </p>
       </div>
 

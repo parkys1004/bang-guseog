@@ -9,7 +9,7 @@ interface Site {
   category: string;
 }
 
-const recommendedSites: Site[] = [
+export const recommendedSites: Site[] = [
   {
     name: 'ChatGPT',
     description: 'OpenAI의 대화형 AI 모델로, 작사, 아이디어 구상, 코드 작성 등 다양한 작업에 활용할 수 있습니다.',
