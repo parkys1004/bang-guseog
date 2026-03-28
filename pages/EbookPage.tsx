@@ -51,7 +51,7 @@ export const EbookPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) =
           <p className="text-gray-400 dark:text-gray-300 mb-10 max-w-2xl mx-auto transition-colors">
             전자책 구매 시 전용 커뮤니티 초대권과 최신 프롬프트 업데이트를 평생 무료로 제공합니다.
           </p>
-          <button className="bg-white text-black px-8 py-4 rounded-full font-bold hover:bg-gray-200 transition-colors shadow-xl">
+          <button className="bg-[#2563eb] text-white px-8 py-4 rounded-full font-bold hover:bg-[#1d4ed8] transition-colors shadow-xl">
             전자책 보러가기
           </button>
         </div>

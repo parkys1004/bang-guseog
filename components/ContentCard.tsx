@@ -42,7 +42,7 @@ export const ContentCard: React.FC<Props> = ({ item, onClick, isProAuthenticated
         {/* Badges on Image */}
         <div className="absolute top-3 left-3 flex gap-2 z-10">
           {item.isPro && (
-            <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-white px-2.5 py-1 rounded-md text-[11px] font-black shadow-xl border border-white/20 animate-pulse">
+            <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black px-2.5 py-1 rounded-md text-[11px] font-black shadow-xl border border-white/20 animate-pulse">
               <Crown className="w-3 h-3" />
               회원전용
             </div>
@@ -78,11 +78,7 @@ export const ContentCard: React.FC<Props> = ({ item, onClick, isProAuthenticated
               잠금 해제 및 이동
             </button>
           ) : (
-            <button className={`w-full font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg ${
-              item.isPro 
-                ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-amber-500/20' 
-                : 'bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-blue-500/20'
-            }`}>
+            <button className={`w-full font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg bg-[#2563eb] hover:bg-[#1d4ed8] text-white shadow-blue-500/20`}>
               <ExternalLink className="w-4 h-4" strokeWidth={2.5} />
               바로가기
             </button>

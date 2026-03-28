@@ -74,7 +74,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">빌더 앱</div>
               <button 
                 onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 바로가기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -89,7 +89,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">전자책</div>
               <button 
                 onClick={() => onNavigate('ebook')}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-emerald-100 hover:text-emerald-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 바로가기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -104,7 +104,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">프롬프트</div>
               <button 
                 onClick={() => onNavigate('prompt')}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-purple-100 hover:text-purple-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-purple-900/30 dark:hover:text-purple-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 바로가기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -119,7 +119,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">그외 자료</div>
               <button 
                 onClick={() => onNavigate('service')}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-indigo-100 hover:text-indigo-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 바로가기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -134,7 +134,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">추천사이트</div>
               <button 
                 onClick={() => onNavigate('recommended')}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-pink-100 hover:text-pink-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-pink-900/30 dark:hover:text-pink-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 바로가기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -149,7 +149,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">업데이트</div>
               <button 
                 onClick={() => onNavigate('contact')}
-                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 hover:bg-orange-100 hover:text-orange-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-orange-900/30 dark:hover:text-orange-400 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[#2563eb] text-white hover:bg-[#1d4ed8] transition-colors shadow-sm"
               >
                 문의하기 <ArrowRight className="w-3 h-3" />
               </button>
@@ -202,12 +202,12 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
                 className={`px-4 py-1.5 rounded-md text-[11px] font-bold transition-all flex items-center gap-1.5 ${
                   activeVisibility === vis 
                     ? (vis === '회원전용'
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white shadow-lg shadow-amber-500/20'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-600 text-black shadow-lg shadow-amber-500/20'
                         : 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20')
                     : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
-                {vis === '회원전용' && <Lock className={`w-3 h-3 ${activeVisibility === vis ? 'text-white' : 'text-amber-500'}`} />}
+                {vis === '회원전용' && <Lock className={`w-3 h-3 ${activeVisibility === vis ? 'text-black' : 'text-amber-500'}`} />}
                 {vis}
               </button>
             ))}

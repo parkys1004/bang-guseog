@@ -144,9 +144,7 @@ export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) 
                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   copiedId === item.id
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : item.isPro && !isProAuthenticated
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-sm'
                 }`}
               >
                 {copiedId === item.id ? (
