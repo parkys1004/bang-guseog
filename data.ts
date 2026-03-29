@@ -83,7 +83,7 @@ export const EBOOK_CONTENTS: EbookItem[] = [
     coverUrl: 'https://github.com/parkys1004/img/blob/main/aimusic01.jpg?raw=true',
     isPro: true,
     isFree: false,
-    url: '#'
+    url: 'https://suno-ai-e-book.vercel.app/'
   },
   {
     id: 'eb2',
