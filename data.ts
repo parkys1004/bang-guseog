@@ -52,7 +52,7 @@ export const AI_CONTENTS: ContentItem[] = [
     title: 'Suno AI 음악 생성기',
     description: "음악파일 생성까지 올일원 자동생성, 한번에 음악파일 최대20개(총40개)생성, 플레이리스트용",
     url: 'https://suno-auto-generation.vercel.app/',
-    isPro: false,
+    isPro: true,
     posterUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/Suno%20AI%20%EC%9D%8C%EC%95%85%20%EC%83%9D%EC%84%B1%EA%B8%B0.png?raw=true'
   },
   {
@@ -87,27 +87,27 @@ export const EBOOK_CONTENTS: EbookItem[] = [
   },
   {
     id: 'eb2',
-    title: '콘텐츠 크리에이터를 위한 AI 프롬프트 수익화 마스터 가이드',
-    description: '콘텐츠 크리에이터를 위한 AI 수익화 완벽 가이드입니다. 최신 AI 모델 활용법과 프롬프트 엔지니어링 기법을 통...',
-    coverUrl: 'https://picsum.photos/seed/ebook2/400/600',
+    title: '기획부터 배포까지 1시간',
+    description: '준비중',
+    coverUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/ebook_01.jpg?raw=true',
     isPro: true,
     isFree: false,
     url: '#'
   },
   {
     id: 'eb3',
-    title: 'MCP 실용 매뉴얼 - 인터랙티브 가이드',
-    description: 'MCP의 핵심 개념과 아키텍처를 설명하고, Python 기반 서버 구축부터 Claude AI 연동, 보안 설정까지의 ...',
-    coverUrl: 'https://picsum.photos/seed/ebook3/400/600',
+    title: '방구석 뮤지션의 실전 음원 발매',
+    description: '준비중',
+    coverUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/ebook_02.jpg?raw=true',
     isPro: true,
     isFree: false,
     url: '#'
   },
   {
     id: 'eb4',
-    title: '구글이 사랑하는 블로그 SEO 최적화 A to Z',
-    description: '구글 상위 노출을 위한 SEO 최적화 가이드입니다. 최신 알고리즘의 핵심은 E-E-A-T(경험·전문성·권위·신뢰)...',
-    coverUrl: 'https://picsum.photos/seed/ebook4/400/600',
+    title: '디지털 음원 큐레이션',
+    description: '준비중',
+    coverUrl: 'https://github.com/parkys1004/img/blob/main/bang-guseog/ebook_03.jpg?raw=true',
     isPro: true,
     isFree: false,
     url: '#'
