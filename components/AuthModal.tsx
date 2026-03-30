@@ -16,7 +16,8 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, signup, loginWithGoogle, resetPassword } = useAuth();
+  const [showResendBtn, setShowResendBtn] = useState(false);
+  const { login, signup, loginWithGoogle, resetPassword, resendVerificationEmail } = useAuth();
 
   if (!isOpen) return null;
 
@@ -35,6 +36,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setError('');
         setIsResetPassword(false);
         setIsLogin(true);
+        setShowResendBtn(false);
       } else if (isLogin) {
         await login(trimmedEmail, password);
         onClose(); // Close modal on success
@@ -49,10 +51,30 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setSuccess(err.message);
         setIsLogin(true);
         setError('');
+        setShowResendBtn(false);
       } else {
         setError(err.message || '오류가 발생했습니다.');
         setSuccess('');
+        if (err.message.includes('이메일 인증이 완료되지 않았습니다')) {
+          setShowResendBtn(true);
+        } else {
+          setShowResendBtn(false);
+        }
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      await resendVerificationEmail(email.trim(), password);
+      setSuccess('인증 메일이 재전송되었습니다. 메일함을 확인해주세요.');
+      setShowResendBtn(false);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +109,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
               setIsLogin(true);
               setError('');
               setSuccess('');
+              setShowResendBtn(false);
             }}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
@@ -97,8 +120,18 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         {/* Form Body */}
         <div className="p-6">
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium border border-red-100 dark:border-red-900/50">
-              {error}
+            <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium border border-red-100 dark:border-red-900/50 flex flex-col gap-2">
+              <span>{error}</span>
+              {showResendBtn && (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  className="self-start px-3 py-1.5 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 rounded-md text-xs font-bold transition-colors disabled:opacity-50"
+                >
+                  인증 메일 재전송
+                </button>
+              )}
             </div>
           )}
           {success && (
@@ -242,6 +275,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   setIsLogin(true);
                   setError('');
                   setSuccess('');
+                  setShowResendBtn(false);
                 }}
                 className="font-bold text-blue-600 dark:text-blue-400 hover:underline"
               >
@@ -255,6 +289,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     setIsLogin(!isLogin);
                     setError('');
                     setSuccess('');
+                    setShowResendBtn(false);
                   }}
                   className="ml-2 font-bold text-blue-600 dark:text-blue-400 hover:underline"
                 >

@@ -45,6 +45,7 @@ interface AuthContextType {
   updateEmailAddress: (newEmail: string) => Promise<void>;
   updatePasswordValue: (currentPassword: string, newPassword: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendVerificationEmail: (email: string, password: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   loading: boolean;
 }
@@ -147,6 +148,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('인증되지 않은 도메인입니다. 관리자에게 문의하세요.');
       }
       throw new Error(`로그인 중 오류가 발생했습니다: ${error.code || error.message}`);
+    }
+  };
+
+  const resendVerificationEmail = async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCredential.user.emailVerified) {
+        await sendEmailVerification(userCredential.user);
+        await signOut(auth);
+      } else {
+        await signOut(auth);
+        throw new Error('이미 인증된 계정입니다. 로그인해주세요.');
+      }
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      if (error.message === '이미 인증된 계정입니다. 로그인해주세요.') throw error;
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
+      }
+      throw new Error(`인증 메일 재전송 중 오류가 발생했습니다: ${error.message}`);
     }
   };
 
@@ -380,6 +401,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateEmailAddress,
       updatePasswordValue,
       resetPassword,
+      resendVerificationEmail,
       deleteAccount,
       loading 
     }}>
