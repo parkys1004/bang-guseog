@@ -298,10 +298,10 @@ const AppContent: React.FC = () => {
                </button>
 
                <button 
-                 onClick={() => setActivePage('contact')}
+                 onClick={() => window.open('https://kmong.com/self-marketing/730531/ZQh4nXZpK5', '_blank')}
                  className={`hidden md:block px-5 py-2 rounded-full text-sm font-bold transition-colors ${isDarkMode ? 'bg-white text-black hover:bg-gray-200' : 'bg-black text-white hover:bg-gray-800'}`}
                >
-                 프로젝트 시작하기
+                 크몽 구매하기
                </button>
               <button 
                 className={`p-2 transition-colors md:hidden ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-black'}`}

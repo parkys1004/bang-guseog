@@ -15,7 +15,8 @@ import {
   signInWithPopup,
   linkWithPopup,
   unlink,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -43,6 +44,7 @@ interface AuthContextType {
   updateProfileInfo: (name: string, photoURL?: string) => Promise<void>;
   updateEmailAddress: (newEmail: string) => Promise<void>;
   updatePasswordValue: (currentPassword: string, newPassword: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   deleteAccount: () => Promise<void>;
   loading: boolean;
 }
@@ -331,6 +333,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      console.error("Password reset error:", error);
+      if (error.code === 'auth/user-not-found') {
+        throw new Error('가입되지 않은 이메일입니다.');
+      }
+      throw new Error(`비밀번호 재설정 이메일 발송 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
   const deleteAccount = async () => {
     if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
     
@@ -365,6 +379,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateProfileInfo,
       updateEmailAddress,
       updatePasswordValue,
+      resetPassword,
       deleteAccount,
       loading 
     }}>
