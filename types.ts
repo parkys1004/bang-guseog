@@ -11,6 +11,7 @@ export interface ContentItem {
   url: string; 
   isNew?: boolean;
   isPro?: boolean;
+  requiredTier?: 'free' | 'silver' | 'gold';
 }
 
 export interface EbookItem {
@@ -21,6 +22,7 @@ export interface EbookItem {
   isPro: boolean;
   isFree?: boolean;
   url: string;
+  requiredTier?: 'free' | 'silver' | 'gold';
 }
 
 export type Category = '전체' | 'AI STUDIO' | 'VERCEL' | 'ETC' | '전자책';

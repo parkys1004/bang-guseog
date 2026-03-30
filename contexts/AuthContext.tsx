@@ -14,7 +14,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   linkWithPopup,
-  unlink
+  unlink,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -25,6 +26,7 @@ export interface User {
   name: string;
   photoURL?: string | null;
   role: 'admin' | 'user';
+  tier: 'free' | 'silver' | 'gold';
   subscriptionEndDate?: string | null;
   providerId?: string;
 }
@@ -51,14 +53,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
+        if (!firebaseUser.emailVerified && firebaseUser.providerData[0]?.providerId === 'password') {
+          await signOut(auth);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
           let role: 'admin' | 'user' = 'user';
+          let tier: 'free' | 'silver' | 'gold' = 'free';
           let subscriptionEndDate: string | null = null;
           
           if (userDoc.exists()) {
             role = userDoc.data().role || 'user';
+            tier = userDoc.data().tier || 'free';
             subscriptionEndDate = userDoc.data().subscriptionEndDate || null;
           } else {
             // First user or specific email becomes admin
@@ -67,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email: firebaseUser.email,
               name: firebaseUser.displayName || '사용자',
               role: role,
+              tier: tier,
               subscriptionEndDate: null,
               createdAt: new Date().toISOString()
             });
@@ -78,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: firebaseUser.displayName || '사용자',
             photoURL: firebaseUser.photoURL,
             role,
+            tier,
             subscriptionEndDate,
             providerId: firebaseUser.providerData[0]?.providerId
           });
@@ -90,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             name: firebaseUser.displayName || '사용자',
             photoURL: firebaseUser.photoURL,
             role: 'user',
+            tier: 'free',
             providerId: firebaseUser.providerData[0]?.providerId
           });
         }
@@ -104,13 +118,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!userCredential.user.emailVerified && userCredential.user.providerData[0]?.providerId === 'password') {
+        await signOut(auth);
+        throw new Error('auth/not-verified');
+      }
     } catch (error: any) {
       console.error("Login error details:", {
         code: error.code,
         message: error.message,
         stack: error.stack
       });
+      if (error.message === 'auth/not-verified') {
+        throw new Error('이메일 인증이 완료되지 않았습니다. 가입하신 이메일의 메일함을 확인해주세요.');
+      }
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         throw new Error('이메일 또는 비밀번호가 일치하지 않습니다.');
       }
@@ -129,6 +151,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const role = email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
+      const tier = 'free';
       
       // Save user to Firestore
       try {
@@ -136,28 +159,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           name,
           role,
+          tier,
           subscriptionEndDate: null,
           createdAt: new Date().toISOString()
         });
       } catch (fsError: any) {
         console.error("Firestore signup error:", fsError);
-        // We don't throw here to allow the user to be logged in even if Firestore fails
-        // The onAuthStateChanged will try to fix it later
       }
 
-      setUser({
-        id: userCredential.user.uid,
-        email: userCredential.user.email || '',
-        name: name,
-        role,
-        subscriptionEndDate: null
-      });
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+      
+      // Sign out immediately
+      await signOut(auth);
+      setUser(null);
+      
+      throw new Error('auth/verification-sent');
     } catch (error: any) {
       console.error("Signup error details:", {
         code: error.code,
         message: error.message,
         stack: error.stack
       });
+      if (error.message === 'auth/verification-sent') {
+        throw new Error('가입하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.');
+      }
       if (error.code === 'auth/email-already-in-use') {
         throw new Error('이미 가입된 이메일입니다.');
       }

@@ -8,10 +8,11 @@
         "email": { "type": "string" },
         "name": { "type": "string" },
         "role": { "type": "string", "enum": ["admin", "user"] },
+        "tier": { "type": "string", "enum": ["free", "silver", "gold"] },
         "subscriptionEndDate": { "type": "string", "format": "date-time" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["email", "name", "role", "createdAt"]
+      "required": ["email", "name", "role", "tier", "createdAt"]
     },
     "Message": {
       "title": "Message",
@@ -26,6 +27,23 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["senderId", "receiverId", "title", "content", "isRead", "createdAt"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Materials uploaded by admin",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "contentUrl": { "type": "string" },
+        "category": { "type": "string", "enum": ["ebook", "prompt", "service", "advanced", "webbuilder"] },
+        "subCategory": { "type": "string" },
+        "requiredTier": { "type": "string", "enum": ["free", "silver", "gold"] },
+        "imageUrl": { "type": "string" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "contentUrl", "category", "requiredTier", "authorId", "createdAt"]
     }
   },
   "firestore": {
@@ -36,6 +54,10 @@
     "/messages/{messageId}": {
       "schema": "Message",
       "description": "Messages sent to users"
+    },
+    "/materials/{materialId}": {
+      "schema": "Material",
+      "description": "Materials uploaded by admin"
     }
   }
 }

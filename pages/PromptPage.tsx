@@ -1,5 +1,37 @@
-import React, { useState } from 'react';
-import { Copy, Check, Sparkles, Lock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Copy, Check, Sparkles, Lock, FileText, ExternalLink, Calendar } from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: any;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, auth: any) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+}
 
 interface PromptItem {
   id: string;
@@ -8,14 +40,14 @@ interface PromptItem {
   description: string;
   prompt: string;
   isPro?: boolean;
+  requiredTier?: 'free' | 'silver' | 'gold';
 }
 
 interface Props {
-  isProAuthenticated: boolean;
   onOpenAuth: () => void;
 }
 
-const PROMPTS: PromptItem[] = [
+export const PROMPTS: PromptItem[] = [
   { id: 'p1', category: '🎵 음악/가사', title: '감성적인 발라드 가사', description: '주제를 주면 1절, 후렴, 2절 구조의 감성적인 가사를 작성합니다.', prompt: '당신은 감성적인 발라드 작사가입니다. 다음 주제를 바탕으로 은유적이고 시적인 가사를 작성해주세요. [1절 - 프리코러스 - 코러스 - 2절 - 코러스 - 브릿지 - 아웃트로] 구조로 작성하며, 감정선이 점점 고조되도록 표현해주세요. 주제: ', isPro: false },
   { id: 'p2', category: '🎵 음악/가사', title: 'K-Pop 아이돌 세계관 기획', description: '새로운 아이돌 그룹의 독창적인 컨셉과 세계관을 기획합니다.', prompt: '새로 데뷔할 K-Pop 아이돌 그룹의 세계관과 컨셉을 기획해주세요. 그룹명 후보 3개, 핵심 메시지, 멤버별 상징 요소, 데뷔곡의 시각적/청각적 컨셉을 포함하여 상세히 작성해주세요. 키워드: ', isPro: true },
   { id: 'p3', category: '🎵 음악/가사', title: '트렌디한 랩 가사 및 라임', description: '특정 키워드를 활용해 펀치라인과 라임이 돋보이는 랩 가사를 씁니다.', prompt: '당신은 트렌디한 힙합 래퍼입니다. 다음 키워드를 활용하여 A-A-B-B 구조의 라임이 딱 떨어지는 랩 가사 16마디를 작성해주세요. 재치 있는 펀치라인을 최소 2개 이상 포함해주세요. 키워드: ', isPro: false },
@@ -62,12 +94,33 @@ const PROMPTS: PromptItem[] = [
 
 const CATEGORIES = ['전체', '🎵 음악/가사', '🎬 유튜브/영상', '📝 블로그/SEO', '📈 마케팅/카피', '💡 아이디어/기획', '🎨 이미지/디자인'];
 
-export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) => {
+export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
+  const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'materials'),
+      where('category', '==', 'prompt'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setMaterials(materialsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'materials', null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleCopy = (item: PromptItem) => {
-    if (item.isPro && !isProAuthenticated) {
+    if (item.isPro && !hasAccess(item.requiredTier || 'free')) {
       onOpenAuth();
       return;
     }
@@ -76,9 +129,48 @@ export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) 
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const hasAccess = (requiredTier: string) => {
+    if (user?.role === 'admin') return true;
+    if (requiredTier === 'free') return true;
+    if (requiredTier === 'silver' && (user?.tier === 'silver' || user?.tier === 'gold')) return true;
+    if (requiredTier === 'gold' && user?.tier === 'gold') return true;
+    return false;
+  };
+
+  const handleMaterialClick = (material: any) => {
+    if (!hasAccess(material.requiredTier)) {
+      alert(`${material.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
+      return;
+    }
+    window.open(material.contentUrl, '_blank');
+  };
+
+  const dbPrompts = materials.map(m => ({
+    id: m.id,
+    category: m.subCategory || '기타',
+    title: m.title,
+    description: m.description,
+    prompt: m.prompt || m.contentUrl || '',
+    isPro: m.requiredTier === 'gold' || m.requiredTier === 'silver',
+    requiredTier: m.requiredTier
+  })) as PromptItem[];
+
+  const allPrompts = [...dbPrompts];
+  const existingTitles = new Set(dbPrompts.map(p => p.title));
+  for (const p of PROMPTS) {
+    if (!existingTitles.has(p.title)) {
+      allPrompts.push({
+        ...p,
+        requiredTier: p.isPro ? 'gold' : 'free' // Default static pro prompts to gold
+      });
+    }
+  }
+
+  const dynamicCategories = ['전체', ...Array.from(new Set(allPrompts.map(p => p.category)))];
+
   const filteredPrompts = selectedCategory === '전체' 
-    ? PROMPTS 
-    : PROMPTS.filter(p => p.category === selectedCategory);
+    ? allPrompts 
+    : allPrompts.filter(p => p.category === selectedCategory);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -92,13 +184,13 @@ export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) 
           ChatGPT / Gemini 프롬프트 모음
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          음악, 영상 기획부터 마케팅, 아이디어 도출까지! 복사해서 바로 사용할 수 있는 42가지 실전 프롬프트입니다.
+          음악, 영상 기획부터 마케팅, 아이디어 도출까지! 복사해서 바로 사용할 수 있는 실전 프롬프트입니다.
         </p>
       </div>
 
       {/* Category Filter */}
       <div className="flex flex-wrap justify-center gap-2 mb-10">
-        {CATEGORIES.map((category) => (
+        {dynamicCategories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
@@ -128,12 +220,14 @@ export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) 
                 {item.description}
               </p>
               <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl relative group">
-                <p className={`text-sm font-mono break-words ${item.isPro && !isProAuthenticated ? 'blur-sm select-none' : 'text-gray-800 dark:text-gray-300'}`}>
+                <p className={`text-sm font-mono break-words ${item.isPro && !hasAccess(item.requiredTier || 'free') ? 'blur-sm select-none' : 'text-gray-800 dark:text-gray-300'}`}>
                   {item.prompt}
                 </p>
-                {item.isPro && !isProAuthenticated && (
+                {item.isPro && !hasAccess(item.requiredTier || 'free') && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-2 py-1 rounded border border-blue-200 dark:border-blue-800">PRO 전용</span>
+                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-2 py-1 rounded border border-blue-200 dark:border-blue-800">
+                      {item.requiredTier === 'gold' ? '골드 전용' : '실버 전용'}
+                    </span>
                   </div>
                 )}
               </div>
@@ -152,10 +246,10 @@ export const PromptPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) 
                     <Check className="w-4 h-4" />
                     복사 완료!
                   </>
-                ) : item.isPro && !isProAuthenticated ? (
+                ) : item.isPro && !hasAccess(item.requiredTier || 'free') ? (
                   <>
                     <Lock className="w-4 h-4" />
-                    PRO 전용 프롬프트
+                    {item.requiredTier === 'gold' ? '골드 전용 프롬프트' : '실버 전용 프롬프트'}
                   </>
                 ) : (
                   <>

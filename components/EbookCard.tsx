@@ -29,9 +29,13 @@ export const EbookCard: React.FC<Props> = ({ item, onClick }) => {
         {/* Badge */}
         <div className="absolute top-3 right-3 z-10">
           {item.isPro ? (
-            <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black text-[11px] font-black px-3 py-1.5 rounded-full shadow-xl border border-white/20 animate-pulse">
+            <div className={`flex items-center gap-1.5 text-[11px] font-black px-3 py-1.5 rounded-full shadow-xl border border-white/20 animate-pulse ${
+              item.requiredTier === 'gold' 
+                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black' 
+                : 'bg-gray-200 text-gray-800'
+            }`}>
               <Crown className="w-3 h-3" />
-              <span>회원전용</span>
+              <span>{item.requiredTier === 'gold' ? '골드 전용' : '실버 전용'}</span>
             </div>
           ) : item.isFree ? (
             <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">

@@ -42,9 +42,13 @@ export const ContentCard: React.FC<Props> = ({ item, onClick, isProAuthenticated
         {/* Badges on Image */}
         <div className="absolute top-3 left-3 flex gap-2 z-10">
           {item.isPro && (
-            <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black px-2.5 py-1 rounded-md text-[11px] font-black shadow-xl border border-white/20 animate-pulse">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black shadow-xl border border-white/20 animate-pulse ${
+              item.requiredTier === 'gold' 
+                ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black' 
+                : 'bg-gray-200 text-gray-800'
+            }`}>
               <Crown className="w-3 h-3" />
-              회원전용
+              {item.requiredTier === 'gold' ? '골드 전용' : '실버 전용'}
             </div>
           )}
         </div>

@@ -12,6 +12,7 @@ service cloud.firestore {
     //   - name: string (required)
     //   - email: string (required)
     //   - role: string (required, 'admin' or 'user')
+    //   - tier: string (required, 'free', 'silver', or 'gold')
     //   - subscriptionEndDate: string (optional, ISO 8601 or 'unlimited')
     //   - createdAt: string (required, ISO 8601)
     //
@@ -23,6 +24,18 @@ service cloud.firestore {
     //   - title: string (required)
     //   - content: string (required)
     //   - isRead: boolean (required)
+    //   - createdAt: string (required, ISO 8601)
+    //
+    // Collection: materials
+    // Document ID: {materialId}
+    // Fields:
+    //   - title: string (required)
+    //   - description: string (required)
+    //   - contentUrl: string (required)
+    //   - category: string (required, 'ebook', 'prompt', 'service', 'advanced', 'webbuilder')
+    //   - requiredTier: string (required, 'free', 'silver', 'gold')
+    //   - imageUrl: string (optional)
+    //   - authorId: string (required)
     //   - createdAt: string (required, ISO 8601)
     //
     // ===============================================================
@@ -55,10 +68,11 @@ service cloud.firestore {
 
     // User validation
     function isValidUser(data) {
-      return data.keys().hasAll(['name', 'email', 'role', 'createdAt']) &&
+      return data.keys().hasAll(['name', 'email', 'role', 'tier', 'createdAt']) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.email is string && isValidEmail(data.email) &&
              data.role in ['admin', 'user'] &&
+             data.tier in ['free', 'silver', 'gold'] &&
              isValidDateString(data.createdAt) &&
              (!('subscriptionEndDate' in data) || data.subscriptionEndDate == null || data.subscriptionEndDate is string);
     }
@@ -71,6 +85,21 @@ service cloud.firestore {
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
              data.isRead is bool &&
+             isValidDateString(data.createdAt);
+    }
+
+    // Material validation
+    function isValidMaterial(data) {
+      return data.keys().hasAll(['title', 'description', 'contentUrl', 'category', 'requiredTier', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.description is string && data.description.size() < 2000 &&
+             data.contentUrl is string && data.contentUrl.size() < 1000 &&
+             data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder'] &&
+             (!('subCategory' in data) || data.subCategory == null || (data.subCategory is string && data.subCategory.size() < 100)) &&
+             data.requiredTier in ['free', 'silver', 'gold'] &&
+             (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('prompt' in data) || data.prompt == null || (data.prompt is string && data.prompt.size() < 10000)) &&
+             data.authorId is string &&
              isValidDateString(data.createdAt);
     }
 
@@ -104,6 +133,14 @@ service cloud.firestore {
         isAdmin() || 
         resource.data.receiverId == request.auth.uid
       );
+    }
+
+    // Material rules
+    match /materials/{materialId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidMaterial(request.resource.data);
+      allow update: if isAdmin() && isValidMaterial(request.resource.data);
+      allow delete: if isAdmin();
     }
   }
 }

@@ -13,6 +13,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login, signup, loginWithGoogle } = useAuth();
 
@@ -27,14 +28,22 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
       const trimmedEmail = email.trim();
       if (isLogin) {
         await login(trimmedEmail, password);
+        onClose(); // Close modal on success
       } else {
         const trimmedName = name.trim();
         if (!trimmedName) throw new Error('이름을 입력해주세요.');
         await signup(trimmedEmail, password, trimmedName);
+        onClose(); // Close modal on success
       }
-      onClose(); // Close modal on success
     } catch (err: any) {
-      setError(err.message || '오류가 발생했습니다.');
+      if (err.message === '가입하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.') {
+        setSuccess(err.message);
+        setIsLogin(true);
+        setError('');
+      } else {
+        setError(err.message || '오류가 발생했습니다.');
+        setSuccess('');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +84,11 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium border border-red-100 dark:border-red-900/50">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm font-medium border border-green-100 dark:border-green-900/50">
+              {success}
             </div>
           )}
 
@@ -190,6 +204,7 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError('');
+                setSuccess('');
               }}
               className="ml-2 font-bold text-blue-600 dark:text-blue-400 hover:underline"
             >

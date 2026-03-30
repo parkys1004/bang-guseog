@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -13,6 +13,7 @@ import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdvancedMaterialsPage } from './pages/AdvancedMaterialsPage';
 import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -31,41 +32,17 @@ const testConnection = async () => {
 
 testConnection();
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'user-dashboard' | 'admin-dashboard';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials';
 
 const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isProAuthenticated, setIsProAuthenticated] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
-
-  // Check user subscription for PRO access
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') {
-        setIsProAuthenticated(true);
-      } else if (user.subscriptionEndDate) {
-        const endDate = new Date(user.subscriptionEndDate);
-        const now = new Date();
-        if (endDate >= now) {
-          setIsProAuthenticated(true);
-        } else {
-          setIsProAuthenticated(false);
-        }
-      } else {
-        // If subscriptionEndDate is null, it means no access (or unlimited? Let's assume unlimited if we want, but usually it means no access. Wait, earlier I set it to null. Let's assume null means unlimited for now, or maybe null means no PRO access. Let's make null mean NO access, and they need a date. Actually, let's make null mean unlimited for backward compatibility, or no access? Let's make null mean unlimited access for now, or just require a date. Let's require a date for PRO access.)
-        // Actually, let's make null mean NO access.
-        setIsProAuthenticated(false);
-      }
-    } else {
-      setIsProAuthenticated(false);
-    }
-  }, [user]);
 
   // Fetch unread messages count
   useEffect(() => {
@@ -149,8 +126,6 @@ const AppContent: React.FC = () => {
   const handleOpenAuth = () => {
     if (!user) {
       setIsAuthModalOpen(true);
-    } else if (!isProAuthenticated) {
-      alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다. 관리자에게 문의하세요.');
     }
   };
 
@@ -158,13 +133,12 @@ const AppContent: React.FC = () => {
     switch (activePage) {
       case 'showcase': return (
         <ShowcasePage 
-          isProAuthenticated={isProAuthenticated} 
           onOpenAuth={handleOpenAuth} 
           onNavigate={setActivePage}
         />
       );
-      case 'ebook': return <EbookPage isProAuthenticated={isProAuthenticated} onOpenAuth={handleOpenAuth} />;
-      case 'prompt': return <PromptPage isProAuthenticated={isProAuthenticated} onOpenAuth={handleOpenAuth} />;
+      case 'ebook': return <EbookPage onOpenAuth={handleOpenAuth} />;
+      case 'prompt': return <PromptPage onOpenAuth={handleOpenAuth} />;
       case 'service': return <ServicePage />;
       case 'about': return <AboutPage />;
       case 'contact': return <ContactPage />;
@@ -172,9 +146,9 @@ const AppContent: React.FC = () => {
       case 'recommended': return <RecommendedSitesPage />;
       case 'user-dashboard': return <UserDashboard />;
       case 'admin-dashboard': return <AdminDashboard />;
+      case 'advanced-materials': return <AdvancedMaterialsPage />;
       default: return (
         <ShowcasePage 
-          isProAuthenticated={isProAuthenticated} 
           onOpenAuth={handleOpenAuth} 
           onNavigate={setActivePage}
         />
@@ -224,23 +198,25 @@ const AppContent: React.FC = () => {
 
             {/* Icons / Actions */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-               {/* PRO Auth Button */}
+               {/* Tier Badge */}
                <button
                  onClick={() => {
                    if (!user) {
                      setIsAuthModalOpen(true);
-                   } else if (!isProAuthenticated) {
-                     alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다.');
+                   } else {
+                     setActivePage('user-dashboard');
                    }
                  }}
                  className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                   isProAuthenticated 
-                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800' 
-                     : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent'
+                   user?.tier === 'gold' || user?.role === 'admin'
+                     ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800' 
+                     : user?.tier === 'silver'
+                     ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
+                     : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
                  }`}
                >
-                 {isProAuthenticated ? <ShieldCheck className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                 {isProAuthenticated ? '회원전용 사용중' : '회원전용 (구독필요)'}
+                 {user?.tier === 'gold' || user?.role === 'admin' ? <Crown className="w-4 h-4" /> : user?.tier === 'silver' ? <ShieldCheck className="w-4 h-4" /> : <UserIcon className="w-4 h-4" />}
+                 {user?.role === 'admin' ? '관리자' : user?.tier === 'gold' ? '골드 회원' : user?.tier === 'silver' ? '실버 회원' : user ? '무료 회원' : '로그인 필요'}
                </button>
 
                 {/* User Auth Buttons */}
@@ -252,6 +228,14 @@ const AppContent: React.FC = () => {
                         className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'admin-dashboard' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}`}
                       >
                         관리자
+                      </button>
+                    )}
+                    {user.tier === 'gold' && (
+                      <button
+                        onClick={() => setActivePage('advanced-materials')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-colors ${activePage === 'advanced-materials' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'}`}
+                      >
+                        고급 자료실
                       </button>
                     )}
                     <button
@@ -404,24 +388,26 @@ const AppContent: React.FC = () => {
                 </button>
               )}
 
-              {/* Mobile PRO Auth */}
+              {/* Mobile Tier Badge */}
               <button
                 onClick={() => {
                   if (!user) {
                     setIsAuthModalOpen(true);
-                  } else if (!isProAuthenticated) {
-                    alert('회원전용 사용 기간이 만료되었거나 권한이 없습니다.');
+                  } else {
+                    setActivePage('user-dashboard');
                   }
                   setIsMobileMenuOpen(false);
                 }}
                 className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all ${
-                  isProAuthenticated 
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                  user?.tier === 'gold' || user?.role === 'admin'
+                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' 
+                    : user?.tier === 'silver'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                 }`}
               >
-                {isProAuthenticated ? <ShieldCheck className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-                {isProAuthenticated ? '회원전용 사용중' : '회원전용 (구독필요)'}
+                {user?.tier === 'gold' || user?.role === 'admin' ? <Crown className="w-5 h-5" /> : user?.tier === 'silver' ? <ShieldCheck className="w-5 h-5" /> : <UserIcon className="w-5 h-5" />}
+                {user?.role === 'admin' ? '관리자' : user?.tier === 'gold' ? '골드 회원' : user?.tier === 'silver' ? '실버 회원' : user ? '무료 회원' : '로그인 필요'}
               </button>
 
               {navItems.map((item) => (

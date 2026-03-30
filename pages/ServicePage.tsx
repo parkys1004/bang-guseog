@@ -1,5 +1,37 @@
-import React from 'react';
-import { Music, ExternalLink, Sparkles, Zap, Video, DollarSign } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Music, ExternalLink, Sparkles, Zap, Video, DollarSign, FileText, Calendar, Lock } from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: any;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, auth: any) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+}
 
 const ServiceCard: React.FC<{ title: string; desc: string; icon: React.ReactNode; url?: string }> = ({ title, desc, icon, url }) => (
   <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
@@ -59,6 +91,64 @@ export const servicesData = [
 ];
 
 export const ServicePage: React.FC = () => {
+  const { user } = useAuth();
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'materials'),
+      where('category', '==', 'service'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setMaterials(materialsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'materials', null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const hasAccess = (requiredTier: string) => {
+    if (user?.role === 'admin') return true;
+    if (requiredTier === 'free') return true;
+    if (requiredTier === 'silver' && (user?.tier === 'silver' || user?.tier === 'gold')) return true;
+    if (requiredTier === 'gold' && user?.tier === 'gold') return true;
+    return false;
+  };
+
+  const dbServices = materials.map(m => ({
+    title: m.title,
+    desc: m.description,
+    url: m.contentUrl,
+    icon: <Sparkles className="w-7 h-7" />, // Default icon for db items
+    requiredTier: m.requiredTier,
+    id: m.id
+  }));
+
+  const allServices = [...dbServices];
+  const existingTitles = new Set(dbServices.map(s => s.title));
+  for (const s of servicesData) {
+    if (!existingTitles.has(s.title)) {
+      allServices.push({
+        ...s,
+        requiredTier: 'free', // Assuming static ones are free by default unless specified
+        id: s.title
+      });
+    }
+  }
+
+  const handleMaterialClick = (material: any) => {
+    if (!hasAccess(material.requiredTier)) {
+      alert(`${material.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
+      return;
+    }
+    window.open(material.url, '_blank');
+  };
   return (
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 animate-in fade-in duration-500">
@@ -73,15 +163,48 @@ export const ServicePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {servicesData.map((service, index) => (
-            <ServiceCard 
-              key={index}
-              icon={service.icon}
-              title={service.title}
-              desc={service.desc}
-              url={service.url}
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          {allServices.map((service, index) => (
+            <div key={service.id || index} className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
+              <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center mb-6 text-gray-900 dark:text-white group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                {service.icon}
+              </div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${
+                  service.requiredTier === 'gold' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
+                  service.requiredTier === 'silver' ? 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300' :
+                  'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                }`}>
+                  {service.requiredTier === 'gold' ? '골드 전용' : service.requiredTier === 'silver' ? '실버 이상' : '무료 회원'}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white transition-colors">{service.title}</h3>
+              <p className="text-gray-500 dark:text-gray-300 leading-relaxed text-sm transition-colors flex-grow">
+                {service.desc}
+              </p>
+              {service.url && (
+                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <button 
+                    onClick={() => handleMaterialClick(service)}
+                    className={`inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-all ${
+                      hasAccess(service.requiredTier)
+                        ? 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-md shadow-blue-500/10'
+                        : 'bg-gray-200 dark:bg-gray-800 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {hasAccess(service.requiredTier) ? (
+                      <>
+                        바로가기 <ExternalLink className="w-4 h-4" />
+                      </>
+                    ) : (
+                      <>
+                        권한 없음 <Lock className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>

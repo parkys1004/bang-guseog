@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight, Crown, Lock } from 'lucide-react';
 import { ContentItem, EbookItem } from '../types';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
@@ -6,19 +6,121 @@ import { servicesData } from './ServicePage';
 import { recommendedSites } from './RecommendedSitesPage';
 import { ContentCard } from '../components/ContentCard';
 import { EbookCard } from '../components/EbookCard';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: any;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, auth: any) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+}
 
 interface Props {
-  isProAuthenticated: boolean;
   onOpenAuth: () => void;
   onNavigate: (page: any) => void;
 }
 
-export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, onNavigate }) => {
+export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('전체');
   const [activeVisibility, setActiveVisibility] = useState('전체');
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredItems = AI_CONTENTS.filter(item => {
+  useEffect(() => {
+    const q = query(collection(db, 'materials'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const materialsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setMaterials(materialsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'materials', null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const hasAccess = (requiredTier?: string) => {
+    if (user?.role === 'admin') return true;
+    if (!requiredTier || requiredTier === 'free') return true;
+    if (requiredTier === 'silver' && (user?.tier === 'silver' || user?.tier === 'gold')) return true;
+    if (requiredTier === 'gold' && user?.tier === 'gold') return true;
+    return false;
+  };
+
+  const webBuilderApps = materials.filter(m => m.category === 'webbuilder').map(m => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    category: m.subCategory || 'ETC',
+    url: m.contentUrl,
+    posterUrl: m.imageUrl,
+    isPro: m.requiredTier === 'gold' || m.requiredTier === 'silver',
+    requiredTier: m.requiredTier
+  })) as ContentItem[];
+
+  const ebooks = materials.filter(m => m.category === 'ebook').map(m => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    url: m.contentUrl,
+    coverUrl: m.imageUrl,
+    isPro: m.requiredTier === 'gold' || m.requiredTier === 'silver',
+    requiredTier: m.requiredTier
+  })) as EbookItem[];
+
+  const displayApps = [...webBuilderApps];
+  const existingAppTitles = new Set(webBuilderApps.map(a => a.title));
+  for (const app of AI_CONTENTS) {
+    if (!existingAppTitles.has(app.title)) {
+      displayApps.push({
+        ...app,
+        requiredTier: app.isPro ? 'gold' : 'free' // Default static pro to gold or silver? Let's say gold.
+      });
+    }
+  }
+
+  const displayEbooks = [...ebooks];
+  const existingEbookTitles = new Set(ebooks.map(e => e.title));
+  for (const ebook of EBOOK_CONTENTS) {
+    if (!existingEbookTitles.has(ebook.title)) {
+      displayEbooks.push({
+        ...ebook,
+        requiredTier: ebook.isPro ? 'gold' : 'free'
+      });
+    }
+  }
+
+  const filteredItems = displayApps.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          item.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === '전체' || item.category === activeCategory;
@@ -29,7 +131,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
     return matchesSearch && matchesCategory && matchesVisibility;
   });
 
-  const filteredEbooks = EBOOK_CONTENTS.filter(item => {
+  const filteredEbooks = displayEbooks.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          item.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesVisibility = activeVisibility === '전체' || 
@@ -40,7 +142,8 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
   });
 
   const handleCardClick = (item: ContentItem | EbookItem) => {
-    if (item.isPro && !isProAuthenticated) {
+    if (item.isPro && !hasAccess(item.requiredTier)) {
+      alert(`${item.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
       onOpenAuth();
       return;
     }
@@ -70,7 +173,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-3 text-blue-600 dark:text-blue-400">
                 <Monitor className="w-5 h-5" />
               </div>
-              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{AI_CONTENTS.length}</div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{displayApps.length}</div>
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">빌더 앱</div>
               <button 
                 onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })}
@@ -85,7 +188,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
               <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-3 text-emerald-600 dark:text-emerald-400">
                 <BookOpen className="w-5 h-5" />
               </div>
-              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{EBOOK_CONTENTS.length}</div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{displayEbooks.length}</div>
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">전자책</div>
               <button 
                 onClick={() => onNavigate('ebook')}
@@ -243,7 +346,7 @@ export const ShowcasePage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth, 
                         key={item.id} 
                         item={item} 
                         onClick={handleCardClick} 
-                        isProAuthenticated={isProAuthenticated}
+                        isProAuthenticated={hasAccess(item.requiredTier)}
                      />
                   ))}
               </div>

@@ -1,22 +1,103 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { EbookCard } from '../components/EbookCard';
 import { EBOOK_CONTENTS } from '../data';
 import { EbookItem } from '../types';
-import { Crown } from 'lucide-react';
+import { Crown, FileText, ExternalLink, Calendar, Lock } from 'lucide-react';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: any;
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null, auth: any) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+}
 
 interface Props {
-  isProAuthenticated: boolean;
   onOpenAuth: () => void;
 }
 
-export const EbookPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) => {
+export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
+  const { user } = useAuth();
+  const [materials, setMaterials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'materials'),
+      where('category', '==', 'ebook'),
+      orderBy('createdAt', 'desc')
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setMaterials(materialsData);
+      setLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'materials', null);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
   const handleCardClick = (item: EbookItem) => {
-    if (item.isPro && !isProAuthenticated) {
+    if (item.isPro && !hasAccess(item.requiredTier || 'gold')) {
       onOpenAuth();
       return;
     }
     window.open(item.url, '_blank');
   };
+
+  const hasAccess = (requiredTier: string) => {
+    if (user?.role === 'admin') return true;
+    if (requiredTier === 'free') return true;
+    if (requiredTier === 'silver' && (user?.tier === 'silver' || user?.tier === 'gold')) return true;
+    if (requiredTier === 'gold' && user?.tier === 'gold') return true;
+    return false;
+  };
+
+  const dbEbooks = materials.map(m => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    url: m.contentUrl,
+    coverUrl: m.imageUrl,
+    isPro: m.requiredTier === 'gold' || m.requiredTier === 'silver',
+    requiredTier: m.requiredTier
+  })) as EbookItem[];
+
+  const allEbooks = [...dbEbooks];
+  const existingTitles = new Set(dbEbooks.map(e => e.title));
+  for (const e of EBOOK_CONTENTS) {
+    if (!existingTitles.has(e.title)) {
+      allEbooks.push({
+        ...e,
+        requiredTier: e.isPro ? 'gold' : 'free'
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">
@@ -36,8 +117,8 @@ export const EbookPage: React.FC<Props> = ({ isProAuthenticated, onOpenAuth }) =
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-          {EBOOK_CONTENTS.map(item => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 mb-16">
+          {allEbooks.map(item => (
             <EbookCard 
               key={item.id} 
               item={item} 
