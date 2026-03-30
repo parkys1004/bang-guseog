@@ -29,6 +29,7 @@ export interface User {
   tier: 'free' | 'silver' | 'gold';
   subscriptionEndDate?: string | null;
   providerId?: string;
+  providers?: string[];
 }
 
 interface AuthContextType {
@@ -36,6 +37,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  linkGoogleAccount: () => Promise<void>;
+  unlinkGoogleAccount: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfileInfo: (name: string, photoURL?: string) => Promise<void>;
   updateEmailAddress: (newEmail: string) => Promise<void>;
@@ -92,7 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role,
             tier,
             subscriptionEndDate,
-            providerId: firebaseUser.providerData[0]?.providerId
+            providerId: firebaseUser.providerData[0]?.providerId,
+            providers: firebaseUser.providerData.map(p => p.providerId)
           });
         } catch (error) {
           console.error("Error fetching user role:", error);
@@ -104,7 +108,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: firebaseUser.photoURL,
             role: 'user',
             tier: 'free',
-            providerId: firebaseUser.providerData[0]?.providerId
+            providerId: firebaseUser.providerData[0]?.providerId,
+            providers: firebaseUser.providerData.map(p => p.providerId)
           });
         }
       } else {
@@ -211,6 +216,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const linkGoogleAccount = async () => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await linkWithPopup(auth.currentUser, provider);
+      
+      // Update user state with new providers
+      setUser(prev => prev ? {
+        ...prev,
+        providers: result.user.providerData.map(p => p.providerId)
+      } : null);
+    } catch (error: any) {
+      console.error("Google link error:", error);
+      if (error.code === 'auth/credential-already-in-use') {
+        throw new Error('이미 다른 계정에 연결된 구글 계정입니다.');
+      }
+      throw new Error(`구글 계정 연결 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
+  const unlinkGoogleAccount = async () => {
+    if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
+    
+    // Check if user has other providers or a password before unlinking
+    const hasPassword = auth.currentUser.providerData.some(p => p.providerId === 'password');
+    const otherProviders = auth.currentUser.providerData.filter(p => p.providerId !== 'google.com');
+    
+    if (!hasPassword && otherProviders.length === 0) {
+      throw new Error('비밀번호가 설정되어 있지 않아 구글 계정 연결을 해제할 수 없습니다. 먼저 비밀번호를 설정해주세요.');
+    }
+
+    try {
+      const result = await unlink(auth.currentUser, 'google.com');
+      
+      // Update user state with new providers
+      setUser(prev => prev ? {
+        ...prev,
+        providers: result.providerData.map(p => p.providerId)
+      } : null);
+    } catch (error: any) {
+      console.error("Google unlink error:", error);
+      throw new Error(`구글 계정 연결 해제 중 오류가 발생했습니다: ${error.message}`);
+    }
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
@@ -309,6 +359,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login, 
       signup, 
       loginWithGoogle, 
+      linkGoogleAccount,
+      unlinkGoogleAccount,
       logout, 
       updateProfileInfo,
       updateEmailAddress,

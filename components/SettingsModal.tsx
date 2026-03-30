@@ -9,7 +9,7 @@ interface Props {
 }
 
 export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const { user, updateProfileInfo, updatePasswordValue, deleteAccount, logout } = useAuth();
+  const { user, updateProfileInfo, updatePasswordValue, deleteAccount, logout, linkGoogleAccount, unlinkGoogleAccount } = useAuth();
   
   const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'account'>('profile');
   const [loading, setLoading] = useState(false);
@@ -86,6 +86,34 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
       onClose();
     } catch (err: any) {
       setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleLinkGoogle = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await linkGoogleAccount();
+      setSuccess('구글 계정이 성공적으로 연결되었습니다.');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnlinkGoogle = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await unlinkGoogleAccount();
+      setSuccess('구글 계정 연결이 해제되었습니다.');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -309,14 +337,29 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         <div>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">Google 계정</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {user?.providerId === 'google.com' ? '연결됨' : '연결되지 않음'}
+                            {user?.providers?.includes('google.com') ? '연결됨' : '연결되지 않음'}
                           </p>
                         </div>
                       </div>
-                      {user?.providerId === 'google.com' ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      {user?.providers?.includes('google.com') ? (
+                        <div className="flex items-center gap-4">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                          <button 
+                            onClick={handleUnlinkGoogle}
+                            disabled={loading}
+                            className="text-xs font-bold text-red-500 hover:text-red-600 hover:underline disabled:opacity-50"
+                          >
+                            연결 해제
+                          </button>
+                        </div>
                       ) : (
-                        <button className="text-xs font-bold text-blue-600 hover:underline">연결하기</button>
+                        <button 
+                          onClick={handleLinkGoogle}
+                          disabled={loading}
+                          className="text-xs font-bold text-blue-600 hover:underline disabled:opacity-50"
+                        >
+                          연결하기
+                        </button>
                       )}
                     </div>
                   </div>
