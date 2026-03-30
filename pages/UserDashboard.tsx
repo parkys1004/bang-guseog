@@ -148,30 +148,6 @@ export const UserDashboard: React.FC = () => {
 
         {/* Activity Section */}
         <div className="md:col-span-2 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm flex items-start gap-4">
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
-                <Heart className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1">찜한 자료</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">관심있는 프롬프트와 전자책을 모아보세요.</p>
-                <span className="text-2xl font-black">0<span className="text-sm font-medium text-gray-500 ml-1">개</span></span>
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm flex items-start gap-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl">
-                <Clock className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg mb-1">최근 본 콘텐츠</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">최근에 열람한 자료들을 다시 확인하세요.</p>
-                <span className="text-2xl font-black">0<span className="text-sm font-medium text-gray-500 ml-1">개</span></span>
-              </div>
-            </div>
-          </div>
-
           <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-lg flex items-center gap-2">
@@ -226,13 +202,6 @@ export const UserDashboard: React.FC = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
-            <h3 className="font-bold text-lg mb-4">내 활동 내역</h3>
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
-              아직 활동 내역이 없습니다.
             </div>
           </div>
         </div>
