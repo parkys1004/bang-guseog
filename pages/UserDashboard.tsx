@@ -3,12 +3,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { User as UserIcon, Settings, Heart, Clock, ShieldCheck, Calendar, Mail, Send, Trash2, ChevronRight, X } from 'lucide-react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { SettingsModal } from '../components/SettingsModal';
 
 export const UserDashboard: React.FC = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleFirestoreError = (error: unknown, operationType: string, path: string | null) => {
     const errInfo = {
@@ -131,7 +133,10 @@ export const UserDashboard: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <button className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300">
+              <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 <div className="flex items-center gap-3">
                   <Settings className="w-4 h-4 text-gray-400" />
                   계정 설정
@@ -272,6 +277,12 @@ export const UserDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 };
