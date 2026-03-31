@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download } from 'lucide-react';
+import { ref, onValue, set } from 'firebase/database';
+import { db, rtdb } from '../firebase';
+import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
 import { PROMPTS } from './PromptPage';
@@ -46,8 +47,8 @@ export const AdminDashboard: React.FC = () => {
   const [materialPrompt, setMaterialPrompt] = useState('');
   const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder'>('advanced');
   const [materialSubCategory, setMaterialSubCategory] = useState('');
-  const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('silver');
-  const [activeTab, setActiveTab] = useState<'users' | 'materials'>('users');
+  const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('gold');
+  const [activeTab, setActiveTab] = useState<'users' | 'materials' | 'settings'>('users');
   const [materials, setMaterials] = useState<any[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -60,6 +61,13 @@ export const AdminDashboard: React.FC = () => {
   // Modal states
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean, message: string }>({ isOpen: false, message: '' });
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, message: string, onConfirm: () => void }>({ isOpen: false, message: '', onConfirm: () => {} });
+
+  // Master Password state
+  const [currentMasterPassword, setCurrentMasterPassword] = useState('');
+  const [newMasterPassword, setNewMasterPassword] = useState('');
+  const [passwordLastUpdated, setPasswordLastUpdated] = useState('');
+  const [passwordLastUpdatedBy, setPasswordLastUpdatedBy] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const showAlert = (message: string) => {
     setAlertModal({ isOpen: true, message });
@@ -89,6 +97,8 @@ export const AdminDashboard: React.FC = () => {
       let unsubscribeUsers: () => void;
       let unsubscribeMaterials: () => void;
 
+      let unsubscribeConfig: (() => void) | undefined;
+
       if (activeTab === 'users') {
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
         unsubscribeUsers = onSnapshot(q, (querySnapshot) => {
@@ -112,11 +122,27 @@ export const AdminDashboard: React.FC = () => {
           showAlert("자료 목록을 불러오는데 실패했습니다.");
           setLoadingMaterials(false);
         });
+      } else if (activeTab === 'settings') {
+        const configRef = ref(rtdb, 'globalConfig');
+        unsubscribeConfig = onValue(configRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            setCurrentMasterPassword(data.currentPassword || '');
+            setPasswordLastUpdated(data.lastUpdated || '');
+            setPasswordLastUpdatedBy(data.lastUpdatedBy || '');
+          }
+          setLoading(false);
+        }, (err) => {
+          console.error("Failed to fetch global config:", err);
+          showAlert("설정 정보를 불러오는데 실패했습니다.");
+          setLoading(false);
+        });
       }
 
       return () => {
         if (unsubscribeUsers) unsubscribeUsers();
         if (unsubscribeMaterials) unsubscribeMaterials();
+        if (unsubscribeConfig) unsubscribeConfig();
       };
     } else {
       setLoading(false);
@@ -158,7 +184,7 @@ export const AdminDashboard: React.FC = () => {
               contentUrl: item.url === '#' ? '' : item.url,
               category: 'webbuilder',
               subCategory: item.category || 'ETC',
-              requiredTier: item.isPro ? 'silver' : 'free',
+              requiredTier: item.isPro ? 'gold' : 'free',
               imageUrl: item.posterUrl || null,
               prompt: null,
               authorId: authorId,
@@ -177,7 +203,7 @@ export const AdminDashboard: React.FC = () => {
               description: item.description || '',
               contentUrl: item.url === '#' ? '' : item.url,
               category: 'ebook',
-              requiredTier: item.isPro ? 'silver' : 'free',
+              requiredTier: item.isPro ? 'gold' : 'free',
               imageUrl: item.coverUrl || null,
               prompt: null,
               authorId: authorId,
@@ -198,7 +224,7 @@ export const AdminDashboard: React.FC = () => {
               prompt: item.prompt || '',
               category: 'prompt',
               subCategory: item.category || '기타',
-              requiredTier: item.isPro ? 'silver' : 'free',
+              requiredTier: item.isPro ? 'gold' : 'free',
               imageUrl: null,
               authorId: authorId,
               createdAt: new Date().toISOString()
@@ -333,6 +359,32 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateMasterPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMasterPassword.trim()) {
+      showAlert('새로운 마스터 비밀번호를 입력해주세요.');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const configRef = ref(rtdb, 'globalConfig');
+      await set(configRef, {
+        currentPassword: newMasterPassword,
+        lastUpdated: new Date().toISOString(),
+        lastUpdatedBy: user?.name || user?.email || 'Admin'
+      });
+      
+      showAlert('마스터 비밀번호가 성공적으로 변경되었습니다.');
+      setNewMasterPassword('');
+    } catch (err) {
+      console.error("Failed to update master password:", err);
+      showAlert('마스터 비밀번호 변경에 실패했습니다.');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   const resetMaterialForm = () => {
     setMaterialTitle('');
     setMaterialDescription('');
@@ -341,7 +393,7 @@ export const AdminDashboard: React.FC = () => {
     setMaterialPrompt('');
     setMaterialCategory('advanced');
     setMaterialSubCategory('');
-    setMaterialTier('silver');
+    setMaterialTier('gold');
     setEditingMaterialId(null);
   };
 
@@ -418,7 +470,7 @@ export const AdminDashboard: React.FC = () => {
       setMaterialUrl('');
       setMaterialCategory('advanced');
       setMaterialSubCategory('');
-      setMaterialTier('silver');
+      setMaterialTier('gold');
     } catch (err) {
       handleFirestoreError(err, 'update', `materials/${editingMaterialId}`);
       showAlert('자료 수정에 실패했습니다.');
@@ -530,6 +582,12 @@ export const AdminDashboard: React.FC = () => {
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'materials' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
             >
               자료 관리
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+            >
+              환경 설정
             </button>
           </div>
 
@@ -899,7 +957,7 @@ export const AdminDashboard: React.FC = () => {
         )}
       </div>
       </>
-      ) : (
+      ) : activeTab === 'materials' ? (
         <div className="space-y-6 animate-in fade-in">
           {/* Materials Filter */}
           <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
@@ -1060,7 +1118,79 @@ export const AdminDashboard: React.FC = () => {
           )}
         </div>
       </div>
-      )}
+      ) : activeTab === 'settings' ? (
+        <div className="space-y-6 animate-in fade-in">
+          <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <ShieldCheck className="w-6 h-6 text-emerald-500" />
+              <h2 className="text-xl font-bold">마스터 비밀번호 관리</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-xl border border-gray-100 dark:border-gray-800">
+                  <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">현재 마스터 비밀번호</h3>
+                  <div className="flex items-center gap-3">
+                    <Key className="w-5 h-5 text-emerald-500" />
+                    <span className="text-2xl font-mono font-bold tracking-wider text-gray-900 dark:text-white">
+                      {currentMasterPassword || '설정되지 않음'}
+                    </span>
+                  </div>
+                  
+                  {passwordLastUpdated && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Calendar className="w-4 h-4" />
+                        <span>마지막 변경일: {new Date(passwordLastUpdated).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <Users className="w-4 h-4" />
+                        <span>변경자: {passwordLastUpdatedBy || '알 수 없음'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div>
+                <form onSubmit={handleUpdateMasterPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                      새로운 마스터 비밀번호
+                    </label>
+                    <input
+                      type="text"
+                      value={newMasterPassword}
+                      onChange={(e) => setNewMasterPassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-mono"
+                      placeholder="새로운 비밀번호 입력"
+                      required
+                    />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      * 변경 시 즉시 적용되며, 기존 비밀번호로는 접근할 수 없습니다.
+                    </p>
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword || !newMasterPassword.trim()}
+                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                  >
+                    {isUpdatingPassword ? (
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-5 h-5" />
+                        즉시 변경
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Material Upload Modal */}
       {isUploadModalOpen && (
