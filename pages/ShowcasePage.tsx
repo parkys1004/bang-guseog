@@ -104,7 +104,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
     if (!existingAppTitles.has(app.title)) {
       displayApps.push({
         ...app,
-        requiredTier: app.isPro ? 'gold' : 'free' // Default static pro to gold or silver? Let's say gold.
+        requiredTier: app.isPro ? 'silver' : 'free' // Default static pro to silver
       });
     }
   }
@@ -115,7 +115,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
     if (!existingEbookTitles.has(ebook.title)) {
       displayEbooks.push({
         ...ebook,
-        requiredTier: ebook.isPro ? 'gold' : 'free'
+        requiredTier: ebook.isPro ? 'silver' : 'free'
       });
     }
   }

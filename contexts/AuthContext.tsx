@@ -235,6 +235,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.code === 'auth/unauthorized-domain') {
         throw new Error('인증되지 않은 도메인입니다. 관리자에게 문의하세요.');
       }
+      if (error.message && error.message.includes('disallowed_useragent')) {
+        throw new Error('앱 내장 브라우저에서는 구글 로그인을 지원하지 않습니다. 사파리나 크롬 등 외부 브라우저로 접속해주세요.');
+      }
       throw new Error(`구글 로그인 중 오류가 발생했습니다: ${error.code || error.message}`);
     }
   };
@@ -254,6 +257,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Google link error:", error);
       if (error.code === 'auth/credential-already-in-use') {
         throw new Error('이미 다른 계정에 연결된 구글 계정입니다.');
+      }
+      if (error.message && error.message.includes('disallowed_useragent')) {
+        throw new Error('앱 내장 브라우저에서는 구글 계정 연결을 지원하지 않습니다. 사파리나 크롬 등 외부 브라우저로 접속해주세요.');
       }
       throw new Error(`구글 계정 연결 중 오류가 발생했습니다: ${error.message}`);
     }

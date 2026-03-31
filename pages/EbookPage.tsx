@@ -63,7 +63,7 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
     return () => unsubscribe();
   }, []);
   const handleCardClick = (item: EbookItem) => {
-    if (item.isPro && !hasAccess(item.requiredTier || 'gold')) {
+    if (item.isPro && !hasAccess(item.requiredTier || 'silver')) {
       onOpenAuth();
       return;
     }
@@ -94,7 +94,7 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
     if (!existingTitles.has(e.title)) {
       allEbooks.push({
         ...e,
-        requiredTier: e.isPro ? 'gold' : 'free'
+        requiredTier: e.isPro ? 'silver' : 'free'
       });
     }
   }

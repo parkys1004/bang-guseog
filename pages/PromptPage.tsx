@@ -161,7 +161,7 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
     if (!existingTitles.has(p.title)) {
       allPrompts.push({
         ...p,
-        requiredTier: p.isPro ? 'gold' : 'free' // Default static pro prompts to gold
+        requiredTier: p.isPro ? 'silver' : 'free' // Default static pro prompts to silver
       });
     }
   }

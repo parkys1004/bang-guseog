@@ -1,0 +1,17 @@
+name = "password-rotator"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+
+# 매월 1일 자정(UTC 기준)에 실행
+[triggers]
+crons = ["0 0 1 * *"]
+
+# 일반 환경 변수 (비밀키가 아닌 값들)
+[vars]
+# FIREBASE_DATABASE_URL = "https://your-project-default-rtdb.firebaseio.com"
+# SENDER_EMAIL = "admin@yourdomain.com"
+
+# 주의: 비밀키(Secret)는 이 파일에 적지 마세요.
+# Cloudflare 대시보드나 아래 명령어를 통해 등록해야 합니다.
+# npx wrangler secret put FIREBASE_AUTH_SECRET
+# npx wrangler secret put RESEND_API_KEY

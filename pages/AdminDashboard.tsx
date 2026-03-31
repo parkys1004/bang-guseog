@@ -46,7 +46,7 @@ export const AdminDashboard: React.FC = () => {
   const [materialPrompt, setMaterialPrompt] = useState('');
   const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder'>('advanced');
   const [materialSubCategory, setMaterialSubCategory] = useState('');
-  const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('gold');
+  const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('silver');
   const [activeTab, setActiveTab] = useState<'users' | 'materials'>('users');
   const [materials, setMaterials] = useState<any[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
@@ -158,7 +158,7 @@ export const AdminDashboard: React.FC = () => {
               contentUrl: item.url === '#' ? '' : item.url,
               category: 'webbuilder',
               subCategory: item.category || 'ETC',
-              requiredTier: item.isPro ? 'gold' : 'free',
+              requiredTier: item.isPro ? 'silver' : 'free',
               imageUrl: item.posterUrl || null,
               prompt: null,
               authorId: authorId,
@@ -177,7 +177,7 @@ export const AdminDashboard: React.FC = () => {
               description: item.description || '',
               contentUrl: item.url === '#' ? '' : item.url,
               category: 'ebook',
-              requiredTier: item.isPro ? 'gold' : 'free',
+              requiredTier: item.isPro ? 'silver' : 'free',
               imageUrl: item.coverUrl || null,
               prompt: null,
               authorId: authorId,
@@ -198,7 +198,7 @@ export const AdminDashboard: React.FC = () => {
               prompt: item.prompt || '',
               category: 'prompt',
               subCategory: item.category || '기타',
-              requiredTier: item.isPro ? 'gold' : 'free',
+              requiredTier: item.isPro ? 'silver' : 'free',
               imageUrl: null,
               authorId: authorId,
               createdAt: new Date().toISOString()
@@ -341,7 +341,7 @@ export const AdminDashboard: React.FC = () => {
     setMaterialPrompt('');
     setMaterialCategory('advanced');
     setMaterialSubCategory('');
-    setMaterialTier('gold');
+    setMaterialTier('silver');
     setEditingMaterialId(null);
   };
 
@@ -418,7 +418,7 @@ export const AdminDashboard: React.FC = () => {
       setMaterialUrl('');
       setMaterialCategory('advanced');
       setMaterialSubCategory('');
-      setMaterialTier('gold');
+      setMaterialTier('silver');
     } catch (err) {
       handleFirestoreError(err, 'update', `materials/${editingMaterialId}`);
       showAlert('자료 수정에 실패했습니다.');

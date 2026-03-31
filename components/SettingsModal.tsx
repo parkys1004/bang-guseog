@@ -91,9 +91,19 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
   };
 
   const handleLinkGoogle = async () => {
-    setLoading(true);
     setError(null);
     setSuccess(null);
+    
+    // Check for in-app browser (KakaoTalk, Instagram, Facebook, Naver, Line, etc.)
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const isInApp = /FBAN|FBAV|Instagram|KAKAOTALK|Line|NAVER|Daum/i.test(ua);
+                    
+    if (isInApp) {
+      setError('앱 내장 브라우저(카카오톡 등)에서는 구글 계정 연결을 지원하지 않습니다. 우측 하단/상단의 메뉴를 눌러 "다른 브라우저로 열기"(사파리, 크롬 등)를 선택해주세요.');
+      return;
+    }
+
+    setLoading(true);
     try {
       await linkGoogleAccount();
       setSuccess('구글 계정이 성공적으로 연결되었습니다.');
