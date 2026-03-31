@@ -9,6 +9,99 @@ export interface Env {
 }
 
 export default {
+  // HTTP 요청을 처리하는 함수 (빌더앱에서 비밀번호 검증 API로 사용)
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+
+    // CORS Preflight 처리
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    const url = new URL(request.url);
+
+    // /verify 엔드포인트: 빌더앱에서 비밀번호 검증 요청 시 처리
+    if (request.method === 'POST' && url.pathname === '/verify') {
+      try {
+        const body = await request.json() as { password?: string };
+        const inputPassword = body.password;
+
+        if (!inputPassword) {
+          return new Response(JSON.stringify({ valid: false, message: '비밀번호가 필요합니다.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // 1. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
+        const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_WEB_API_KEY}`;
+        const authResponse = await fetch(authUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: env.ADMIN_EMAIL,
+            password: env.ADMIN_PASSWORD,
+            returnSecureToken: true
+          })
+        });
+
+        if (!authResponse.ok) {
+          return new Response(JSON.stringify({ valid: false, message: '내부 인증 오류' }), { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+
+        const authData: any = await authResponse.json();
+        const idToken = authData.idToken;
+
+        // 2. Firestore에서 현재 마스터 비밀번호 읽어오기
+        const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/config/globalConfig`;
+        const docResponse = await fetch(docUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${idToken}`
+          }
+        });
+
+        if (!docResponse.ok) {
+          return new Response(JSON.stringify({ valid: false, message: '설정 정보를 불러오지 못했습니다.' }), { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+
+        const docData: any = await docResponse.json();
+        const currentPassword = docData.fields?.currentPassword?.stringValue;
+
+        // 3. 입력된 비밀번호와 Firestore의 비밀번호 비교
+        if (inputPassword === currentPassword) {
+          return new Response(JSON.stringify({ valid: true }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } else {
+          return new Response(JSON.stringify({ valid: false }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+      } catch (error) {
+        return new Response(JSON.stringify({ valid: false, message: '서버 오류가 발생했습니다.' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    return new Response('Not Found', { status: 404, headers: corsHeaders });
+  },
+
   // Cron Trigger가 발생할 때 실행되는 함수
   async scheduled(
     controller: ScheduledController,
