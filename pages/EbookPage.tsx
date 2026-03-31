@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { EbookCard } from '../components/EbookCard';
-import { EBOOK_CONTENTS } from '../data';
 import { EbookItem } from '../types';
 import { Crown, FileText, ExternalLink, Calendar, Lock } from 'lucide-react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
@@ -95,15 +94,6 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
   })) as EbookItem[];
 
   const allEbooks = [...dbEbooks];
-  const existingTitles = new Set(dbEbooks.map(e => e.title));
-  for (const e of EBOOK_CONTENTS) {
-    if (!existingTitles.has(e.title)) {
-      allEbooks.push({
-        ...e,
-        requiredTier: e.isPro ? 'gold' : 'free'
-      });
-    }
-  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">

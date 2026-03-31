@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight, Crown, Lock } from 'lucide-react';
 import { ContentItem, EbookItem } from '../types';
-import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
 import { recommendedSites } from './RecommendedSitesPage';
 import { ContentCard } from '../components/ContentCard';
@@ -105,26 +104,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
   })) as EbookItem[];
 
   const displayApps = [...webBuilderApps];
-  const existingAppTitles = new Set(webBuilderApps.map(a => a.title));
-  for (const app of AI_CONTENTS) {
-    if (!existingAppTitles.has(app.title)) {
-      displayApps.push({
-        ...app,
-        requiredTier: app.isPro ? 'gold' : 'free' // Default static pro to gold or silver? Let's say gold.
-      });
-    }
-  }
-
   const displayEbooks = [...ebooks];
-  const existingEbookTitles = new Set(ebooks.map(e => e.title));
-  for (const ebook of EBOOK_CONTENTS) {
-    if (!existingEbookTitles.has(ebook.title)) {
-      displayEbooks.push({
-        ...ebook,
-        requiredTier: ebook.isPro ? 'gold' : 'free'
-      });
-    }
-  }
 
   const filteredItems = displayApps.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -224,7 +204,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
               <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-3 text-indigo-600 dark:text-indigo-400">
                 <FolderOpen className="w-5 h-5" />
               </div>
-              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{servicesData.length}</div>
+              <div className="text-2xl font-black text-gray-900 dark:text-white mb-1">{materials.filter(m => m.category === 'service').length}</div>
               <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">그외 자료</div>
               <button 
                 onClick={() => onNavigate('service')}

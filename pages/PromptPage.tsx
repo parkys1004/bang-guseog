@@ -162,15 +162,6 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
   })) as PromptItem[];
 
   const allPrompts = [...dbPrompts];
-  const existingTitles = new Set(dbPrompts.map(p => p.title));
-  for (const p of PROMPTS) {
-    if (!existingTitles.has(p.title)) {
-      allPrompts.push({
-        ...p,
-        requiredTier: p.isPro ? 'gold' : 'free' // Default static pro prompts to gold
-      });
-    }
-  }
 
   const dynamicCategories = ['전체', ...Array.from(new Set(allPrompts.map(p => p.category)))];
 

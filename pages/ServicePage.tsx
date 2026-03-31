@@ -137,16 +137,6 @@ export const ServicePage: React.FC = () => {
   }));
 
   const allServices = [...dbServices];
-  const existingTitles = new Set(dbServices.map(s => s.title));
-  for (const s of servicesData) {
-    if (!existingTitles.has(s.title)) {
-      allServices.push({
-        ...s,
-        requiredTier: 'free', // Assuming static ones are free by default unless specified
-        id: s.title
-      });
-    }
-  }
 
   const handleMaterialClick = (material: any) => {
     if (!hasAccess(material.requiredTier)) {
