@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { ref, onValue, set } from 'firebase/database';
+import { ref, onValue, update } from 'firebase/database';
 import { db, rtdb } from '../firebase';
 import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
@@ -376,7 +376,7 @@ export const AdminDashboard: React.FC = () => {
     setIsUpdatingPassword(true);
     try {
       const configRef = ref(rtdb, 'globalConfig');
-      await set(configRef, {
+      await update(configRef, {
         currentPassword: newMasterPassword,
         lastUpdated: new Date().toISOString(),
         lastUpdatedBy: user?.name || user?.email || 'Admin'
@@ -1113,7 +1113,7 @@ export const AdminDashboard: React.FC = () => {
                   ))}
                   {filteredMaterials.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
                         <div className="flex flex-col items-center gap-2">
                           <FileText className="w-8 h-8 opacity-20" />
                           <p>검색된 자료가 없습니다.</p>

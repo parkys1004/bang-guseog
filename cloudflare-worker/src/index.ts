@@ -1,7 +1,11 @@
 export interface Env {
   // 환경 변수 (Cloudflare 대시보드에서 설정하거나 wrangler secret으로 등록)
   FIREBASE_DATABASE_URL: string;
-  FIREBASE_AUTH_SECRET: string; // Firebase Realtime Database Secret (Legacy) 또는 Service Account Token
+  FIREBASE_AUTH_SECRET: string; // Firebase Realtime Database Secret (Legacy)
+  FIREBASE_PROJECT_ID: string;
+  FIREBASE_WEB_API_KEY: string;
+  ADMIN_EMAIL: string;
+  ADMIN_PASSWORD: string;
   RESEND_API_KEY: string;
   SENDER_EMAIL: string;
 }
@@ -29,54 +33,91 @@ async function rotatePasswordAndNotify(env: Env) {
     const authParam = `?auth=${env.FIREBASE_AUTH_SECRET}`;
 
     // 2. Firebase Realtime Database 업데이트 (globalConfig/currentPassword)
-    const updateUrl = `${dbUrl}/globalConfig/currentPassword.json${authParam}`;
+    const updateUrl = `${dbUrl}/globalConfig.json${authParam}`;
     const updateRes = await fetch(updateUrl, {
-      method: 'PUT',
+      method: 'PATCH', // PATCH를 사용하여 다른 설정은 유지하고 특정 필드만 업데이트
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newPassword),
+      body: JSON.stringify({
+        currentPassword: newPassword,
+        lastUpdated: new Date().toISOString(),
+        lastUpdatedBy: 'Cloudflare Worker (Auto)'
+      }),
     });
 
     if (!updateRes.ok) {
-      throw new Error(`Failed to update password in Firebase: ${await updateRes.text()}`);
+      throw new Error(`Failed to update password in Firebase RTDB: ${await updateRes.text()}`);
     }
 
-    // 3. Firebase에서 유저 목록 조회
-    const usersUrl = `${dbUrl}/users.json${authParam}`;
-    const usersRes = await fetch(usersUrl);
+    // 3. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
+    const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_WEB_API_KEY}`;
+    const authResponse = await fetch(authUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: env.ADMIN_EMAIL,
+        password: env.ADMIN_PASSWORD,
+        returnSecureToken: true
+      })
+    });
+
+    if (!authResponse.ok) {
+      throw new Error(`Failed to authenticate admin: ${await authResponse.text()}`);
+    }
+
+    const authData: any = await authResponse.json();
+    const idToken = authData.idToken;
+
+    // 4. Firestore에서 유저 목록 조회
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users`;
+    const usersRes = await fetch(firestoreUrl, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`
+      }
+    });
     
     if (!usersRes.ok) {
-      throw new Error(`Failed to fetch users: ${await usersRes.text()}`);
+      throw new Error(`Failed to fetch users from Firestore: ${await usersRes.text()}`);
     }
 
-    const usersData = await usersRes.json();
-    if (!usersData) {
+    const usersData: any = await usersRes.json();
+    if (!usersData.documents || usersData.documents.length === 0) {
       console.log("No users found.");
       return;
     }
 
-    // 4. 조건에 맞는 유저 필터링 (grade가 silver/gold 이고 expiryDate가 남은 유저)
+    // 5. 조건에 맞는 유저 필터링 (tier가 silver/gold 이고 subscriptionEndDate가 남은 유저)
     const now = new Date().getTime();
     const targetEmails: string[] = [];
 
-    for (const key in usersData) {
-      const user = usersData[key];
-      if (!user || !user.email) continue;
+    for (const doc of usersData.documents) {
+      const fields = doc.fields;
+      if (!fields || !fields.email || !fields.email.stringValue) continue;
 
-      const isEligibleGrade = user.grade === 'silver' || user.grade === 'gold';
+      const email = fields.email.stringValue;
+      const tier = fields.tier?.stringValue;
+      const subEndDate = fields.subscriptionEndDate?.stringValue;
+
+      const isEligibleTier = tier === 'silver' || tier === 'gold';
       
-      // expiryDate가 ISO String이거나 Timestamp(숫자)일 수 있으므로 Date 객체로 변환
-      const expiryTime = new Date(user.expiryDate).getTime();
-      const isValidDate = !isNaN(expiryTime) && expiryTime > now;
+      let isValidDate = false;
+      if (!subEndDate) {
+        isValidDate = false; // 구독 종료일이 없으면 만료된 것으로 간주 (또는 정책에 따라 변경 가능)
+      } else if (subEndDate === 'unlimited') {
+        isValidDate = true;
+      } else {
+        const expiryTime = new Date(subEndDate).getTime();
+        isValidDate = !isNaN(expiryTime) && expiryTime > now;
+      }
 
-      if (isEligibleGrade && isValidDate) {
-        targetEmails.push(user.email);
+      if (isEligibleTier && isValidDate) {
+        targetEmails.push(email);
       }
     }
 
     console.log(`Found ${targetEmails.length} eligible users to notify.`);
     if (targetEmails.length === 0) return;
 
-    // 5. Resend API를 사용하여 이메일 발송 (Batch API 사용)
+    // 6. Resend API를 사용하여 이메일 발송 (Batch API 사용)
     // Resend Batch API는 한 번에 최대 100개의 이메일만 보낼 수 있으므로 청크로 나눕니다.
     const CHUNK_SIZE = 100;
     for (let i = 0; i < targetEmails.length; i += CHUNK_SIZE) {
