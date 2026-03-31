@@ -23,7 +23,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
           orderBy('createdAt', 'desc')
         );
         const querySnapshot = await getDocs(q);
-        const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
         materialsData.sort((a, b) => {
           const orderA = typeof a.order === 'number' ? a.order : 999999;
           const orderB = typeof b.order === 'number' ? b.order : 999999;

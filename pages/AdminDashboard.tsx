@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { ref, onValue, update } from 'firebase/database';
-import { db, rtdb } from '../firebase';
+import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
@@ -103,7 +102,7 @@ export const AdminDashboard: React.FC = () => {
       if (activeTab === 'users') {
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
         unsubscribeUsers = onSnapshot(q, (querySnapshot) => {
-          const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
           setUsers(usersData);
           setLoading(false);
         }, (err) => {
@@ -115,7 +114,7 @@ export const AdminDashboard: React.FC = () => {
         setLoadingMaterials(true);
         const q = query(collection(db, 'materials'), orderBy('createdAt', 'desc'));
         unsubscribeMaterials = onSnapshot(q, (querySnapshot) => {
-          const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
           materialsData.sort((a, b) => {
             const orderA = typeof a.order === 'number' ? a.order : 999999;
             const orderB = typeof b.order === 'number' ? b.order : 999999;
@@ -130,10 +129,10 @@ export const AdminDashboard: React.FC = () => {
           setLoadingMaterials(false);
         });
       } else if (activeTab === 'settings') {
-        const configRef = ref(rtdb, 'globalConfig');
-        unsubscribeConfig = onValue(configRef, (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
+        const configRef = doc(db, 'config', 'globalConfig');
+        unsubscribeConfig = onSnapshot(configRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
             setCurrentMasterPassword(data.currentPassword || '');
             setPasswordLastUpdated(data.lastUpdated || '');
             setPasswordLastUpdatedBy(data.lastUpdatedBy || '');
@@ -375,12 +374,12 @@ export const AdminDashboard: React.FC = () => {
 
     setIsUpdatingPassword(true);
     try {
-      const configRef = ref(rtdb, 'globalConfig');
-      await update(configRef, {
+      const configRef = doc(db, 'config', 'globalConfig');
+      await setDoc(configRef, {
         currentPassword: newMasterPassword,
         lastUpdated: new Date().toISOString(),
         lastUpdatedBy: user?.name || user?.email || 'Admin'
-      });
+      }, { merge: true });
       
       showAlert('마스터 비밀번호가 성공적으로 변경되었습니다.');
       setNewMasterPassword('');

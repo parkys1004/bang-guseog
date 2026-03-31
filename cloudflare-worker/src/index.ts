@@ -1,7 +1,5 @@
 export interface Env {
   // 환경 변수 (Cloudflare 대시보드에서 설정하거나 wrangler secret으로 등록)
-  FIREBASE_DATABASE_URL: string;
-  FIREBASE_AUTH_SECRET: string; // Firebase Realtime Database Secret (Legacy)
   FIREBASE_PROJECT_ID: string;
   FIREBASE_WEB_API_KEY: string;
   ADMIN_EMAIL: string;
@@ -28,27 +26,7 @@ async function rotatePasswordAndNotify(env: Env) {
     const newPassword = Math.floor(100000 + Math.random() * 900000).toString();
     console.log(`[${new Date().toISOString()}] Generated new password: ${newPassword}`);
 
-    // Firebase URL 설정 (마지막 슬래시 제거)
-    const dbUrl = env.FIREBASE_DATABASE_URL.replace(/\/$/, '');
-    const authParam = `?auth=${env.FIREBASE_AUTH_SECRET}`;
-
-    // 2. Firebase Realtime Database 업데이트 (globalConfig/currentPassword)
-    const updateUrl = `${dbUrl}/globalConfig.json${authParam}`;
-    const updateRes = await fetch(updateUrl, {
-      method: 'PATCH', // PATCH를 사용하여 다른 설정은 유지하고 특정 필드만 업데이트
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        currentPassword: newPassword,
-        lastUpdated: new Date().toISOString(),
-        lastUpdatedBy: 'Cloudflare Worker (Auto)'
-      }),
-    });
-
-    if (!updateRes.ok) {
-      throw new Error(`Failed to update password in Firebase RTDB: ${await updateRes.text()}`);
-    }
-
-    // 3. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
+    // 2. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
     const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_WEB_API_KEY}`;
     const authResponse = await fetch(authUrl, {
       method: 'POST',
@@ -66,6 +44,27 @@ async function rotatePasswordAndNotify(env: Env) {
 
     const authData: any = await authResponse.json();
     const idToken = authData.idToken;
+
+    // 3. Firestore 업데이트 (config/globalConfig)
+    const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
+    const updateRes = await fetch(updateUrl, {
+      method: 'PATCH',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify({
+        fields: {
+          currentPassword: { stringValue: newPassword },
+          lastUpdated: { stringValue: new Date().toISOString() },
+          lastUpdatedBy: { stringValue: 'Cloudflare Worker (Auto)' }
+        }
+      }),
+    });
+
+    if (!updateRes.ok) {
+      throw new Error(`Failed to update password in Firestore: ${await updateRes.text()}`);
+    }
 
     // 4. Firestore에서 유저 목록 조회
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users`;

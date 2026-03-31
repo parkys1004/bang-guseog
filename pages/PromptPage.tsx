@@ -108,7 +108,7 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
       orderBy('createdAt', 'desc')
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
       materialsData.sort((a, b) => {
         const orderA = typeof a.order === 'number' ? a.order : 999999;
         const orderB = typeof b.order === 'number' ? b.order : 999999;

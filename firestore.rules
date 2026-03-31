@@ -143,5 +143,9 @@ service cloud.firestore {
       allow update: if isAdmin() && isValidMaterial(request.resource.data);
       allow delete: if isAdmin();
     }
+    // Config rules
+    match /config/{configId} {
+      allow read, write: if isAdmin();
+    }
   }
 }
