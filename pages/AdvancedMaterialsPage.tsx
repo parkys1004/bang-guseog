@@ -11,7 +11,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchMaterials = async () => {
-      if (!user || (user.tier !== 'gold' && user.tier !== 'silver')) {
+      if (!user || user.tier !== 'gold') {
         setLoading(false);
         return;
       }
@@ -24,6 +24,12 @@ export const AdvancedMaterialsPage: React.FC = () => {
         );
         const querySnapshot = await getDocs(q);
         const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        materialsData.sort((a, b) => {
+          const orderA = typeof a.order === 'number' ? a.order : 999999;
+          const orderB = typeof b.order === 'number' ? b.order : 999999;
+          if (orderA !== orderB) return orderA - orderB;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         setMaterials(materialsData);
       } catch (error) {
         console.error("Error fetching materials:", error);
@@ -46,7 +52,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
           <Lock className="w-16 h-16 text-amber-500 mx-auto mb-6" />
           <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-4">접근 제한</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            이 페이지는 '실버' 등급 이상 회원만 접근할 수 있습니다.
+            이 페이지는 '골드' 등급 회원만 접근할 수 있습니다.
             등급을 확인하거나 관리자에게 문의하세요.
           </p>
         </div>
@@ -63,7 +69,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
         </div>
         <div className="bg-white dark:bg-[#11141d] p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm mb-8">
           <p className="text-gray-600 dark:text-gray-400">
-            실버 등급 이상 회원님을 위한 특별한 자료들이 준비되어 있습니다.
+            골드 등급 회원님을 위한 특별한 자료들이 준비되어 있습니다.
           </p>
         </div>
 
@@ -79,7 +85,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
                 <div className="p-6 flex-1">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="px-2.5 py-1 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold">
-                      실버 이상 전용
+                      골드 전용
                     </span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">

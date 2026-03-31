@@ -109,6 +109,12 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      materialsData.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 999999;
+        const orderB = typeof b.order === 'number' ? b.order : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setMaterials(materialsData);
       setLoading(false);
     }, (error) => {
@@ -161,7 +167,7 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
     if (!existingTitles.has(p.title)) {
       allPrompts.push({
         ...p,
-        requiredTier: p.isPro ? 'silver' : 'free' // Default static pro prompts to silver
+        requiredTier: p.isPro ? 'gold' : 'free' // Default static pro prompts to gold
       });
     }
   }

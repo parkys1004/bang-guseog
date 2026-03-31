@@ -103,6 +103,12 @@ export const ServicePage: React.FC = () => {
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      materialsData.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 999999;
+        const orderB = typeof b.order === 'number' ? b.order : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setMaterials(materialsData);
       setLoading(false);
     }, (error) => {

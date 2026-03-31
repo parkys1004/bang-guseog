@@ -99,6 +99,7 @@ service cloud.firestore {
              data.requiredTier in ['free', 'silver', 'gold'] &&
              (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
              (!('prompt' in data) || data.prompt == null || (data.prompt is string && data.prompt.size() < 10000)) &&
+             (!('order' in data) || data.order == null || data.order is number) &&
              data.authorId is string &&
              isValidDateString(data.createdAt);
     }

@@ -59,6 +59,12 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
         id: doc.id,
         ...doc.data()
       }));
+      materialsData.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 999999;
+        const orderB = typeof b.order === 'number' ? b.order : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
       setMaterials(materialsData);
       setLoading(false);
     }, (error) => {
@@ -104,7 +110,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
     if (!existingAppTitles.has(app.title)) {
       displayApps.push({
         ...app,
-        requiredTier: app.isPro ? 'silver' : 'free' // Default static pro to silver
+        requiredTier: app.isPro ? 'gold' : 'free' // Default static pro to gold or silver? Let's say gold.
       });
     }
   }
@@ -115,7 +121,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
     if (!existingEbookTitles.has(ebook.title)) {
       displayEbooks.push({
         ...ebook,
-        requiredTier: ebook.isPro ? 'silver' : 'free'
+        requiredTier: ebook.isPro ? 'gold' : 'free'
       });
     }
   }

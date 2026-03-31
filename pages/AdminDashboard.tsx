@@ -48,6 +48,7 @@ export const AdminDashboard: React.FC = () => {
   const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder'>('advanced');
   const [materialSubCategory, setMaterialSubCategory] = useState('');
   const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('gold');
+  const [materialOrder, setMaterialOrder] = useState<number | ''>('');
   const [activeTab, setActiveTab] = useState<'users' | 'materials' | 'settings'>('users');
   const [materials, setMaterials] = useState<any[]>([]);
   const [loadingMaterials, setLoadingMaterials] = useState(false);
@@ -115,6 +116,12 @@ export const AdminDashboard: React.FC = () => {
         const q = query(collection(db, 'materials'), orderBy('createdAt', 'desc'));
         unsubscribeMaterials = onSnapshot(q, (querySnapshot) => {
           const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          materialsData.sort((a, b) => {
+            const orderA = typeof a.order === 'number' ? a.order : 999999;
+            const orderB = typeof b.order === 'number' ? b.order : 999999;
+            if (orderA !== orderB) return orderA - orderB;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
           setMaterials(materialsData);
           setLoadingMaterials(false);
         }, (err) => {
@@ -394,6 +401,7 @@ export const AdminDashboard: React.FC = () => {
     setMaterialCategory('advanced');
     setMaterialSubCategory('');
     setMaterialTier('gold');
+    setMaterialOrder('');
     setEditingMaterialId(null);
   };
 
@@ -414,6 +422,7 @@ export const AdminDashboard: React.FC = () => {
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
+        order: materialOrder === '' ? null : Number(materialOrder),
         authorId: user?.id,
         createdAt: new Date().toISOString()
       });
@@ -439,6 +448,7 @@ export const AdminDashboard: React.FC = () => {
     setMaterialCategory(material.category);
     setMaterialSubCategory(material.subCategory || '');
     setMaterialTier(material.requiredTier);
+    setMaterialOrder(material.order ?? '');
     setIsEditModalOpen(true);
   };
 
@@ -460,17 +470,12 @@ export const AdminDashboard: React.FC = () => {
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
+        order: materialOrder === '' ? null : Number(materialOrder),
       });
       
       showAlert('자료가 성공적으로 수정되었습니다.');
       setIsEditModalOpen(false);
-      setEditingMaterialId(null);
-      setMaterialTitle('');
-      setMaterialDescription('');
-      setMaterialUrl('');
-      setMaterialCategory('advanced');
-      setMaterialSubCategory('');
-      setMaterialTier('gold');
+      resetMaterialForm();
     } catch (err) {
       handleFirestoreError(err, 'update', `materials/${editingMaterialId}`);
       showAlert('자료 수정에 실패했습니다.');
@@ -1014,6 +1019,7 @@ export const AdminDashboard: React.FC = () => {
                 <table className="w-full text-left text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 font-bold">
                     <tr>
+                      <th className="px-6 py-4">순서</th>
                       <th className="px-6 py-4">카테고리</th>
                       <th className="px-6 py-4">제목</th>
                       <th className="px-6 py-4">설명</th>
@@ -1025,6 +1031,9 @@ export const AdminDashboard: React.FC = () => {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredMaterials.map((m) => (
                       <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-6 py-4 font-mono text-sm text-gray-500 dark:text-gray-400">
+                        {m.order ?? '-'}
+                      </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
                           m.category === 'advanced' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' :
@@ -1210,16 +1219,28 @@ export const AdminDashboard: React.FC = () => {
             </div>
             
             <form onSubmit={handleUploadMaterial} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
-                <input
-                  type="text"
-                  value={materialTitle}
-                  onChange={(e) => setMaterialTitle(e.target.value)}
-                  className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="자료 제목을 입력하세요"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
+                  <input
+                    type="text"
+                    value={materialTitle}
+                    onChange={(e) => setMaterialTitle(e.target.value)}
+                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="자료 제목을 입력하세요"
+                    required
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">표시 순서 (선택)</label>
+                  <input
+                    type="number"
+                    value={materialOrder}
+                    onChange={(e) => setMaterialOrder(e.target.value ? Number(e.target.value) : '')}
+                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="숫자가 작을수록 먼저 표시"
+                  />
+                </div>
               </div>
               
               <div>
@@ -1361,16 +1382,28 @@ export const AdminDashboard: React.FC = () => {
             </div>
             
             <form onSubmit={handleUpdateMaterial} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
-                <input
-                  type="text"
-                  value={materialTitle}
-                  onChange={(e) => setMaterialTitle(e.target.value)}
-                  className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                  placeholder="자료 제목을 입력하세요"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
+                  <input
+                    type="text"
+                    value={materialTitle}
+                    onChange={(e) => setMaterialTitle(e.target.value)}
+                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="자료 제목을 입력하세요"
+                    required
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">표시 순서 (선택)</label>
+                  <input
+                    type="number"
+                    value={materialOrder}
+                    onChange={(e) => setMaterialOrder(e.target.value ? Number(e.target.value) : '')}
+                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    placeholder="숫자가 작을수록 먼저 표시"
+                  />
+                </div>
               </div>
               
               <div>
