@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key } from 'lucide-react';
+import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key, UserX } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
 import { PROMPTS } from './PromptPage';
@@ -162,6 +162,18 @@ export const AdminDashboard: React.FC = () => {
       } catch (err) {
         handleFirestoreError(err, 'delete', `materials/${materialId}`);
         showAlert('자료 삭제에 실패했습니다.');
+      }
+    });
+  };
+
+  const handleKickUser = (userId: string) => {
+    showConfirm('정말로 이 회원을 강퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.', async () => {
+      try {
+        await deleteDoc(doc(db, 'users', userId));
+        showAlert('회원이 강퇴되었습니다.');
+      } catch (err) {
+        handleFirestoreError(err, 'delete', `users/${userId}`);
+        showAlert('회원 강퇴에 실패했습니다.');
       }
     });
   };
@@ -941,6 +953,13 @@ export const AdminDashboard: React.FC = () => {
                         >
                           <Mail className="w-4 h-4" />
                         </a>
+                        <button
+                          onClick={() => handleKickUser(u.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="회원 강퇴"
+                        >
+                          <UserX className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
