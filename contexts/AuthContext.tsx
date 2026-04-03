@@ -18,7 +18,7 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 export interface User {
@@ -80,14 +80,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             // First user or specific email becomes admin
             role = firebaseUser.email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
+            tier = 'gold'; // Give gold access for 1 day
+            
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            subscriptionEndDate = tomorrow.toISOString();
+
             await setDoc(userDocRef, {
               email: firebaseUser.email,
               name: firebaseUser.displayName || '사용자',
               role: role,
               tier: tier,
-              subscriptionEndDate: null,
+              subscriptionEndDate,
               createdAt: new Date().toISOString()
             });
+
+            // Get master password
+            let masterPassword = '';
+            try {
+              const configDoc = await getDoc(doc(db, 'config', 'globalConfig'));
+              if (configDoc.exists()) {
+                masterPassword = configDoc.data().currentPassword || '';
+              }
+            } catch (e) {
+              console.error("Failed to get master password", e);
+            }
+
+            // Send welcome message
+            try {
+              await addDoc(collection(db, 'messages'), {
+                title: '가입을 환영합니다!',
+                content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 1일로 자동 설정되었습니다.`,
+                receiverId: firebaseUser.uid,
+                senderId: 'system',
+                senderName: '시스템 관리자',
+                isRead: false,
+                createdAt: new Date().toISOString()
+              });
+            } catch (e) {
+              console.error("Failed to send welcome message", e);
+            }
           }
 
           setUser({
@@ -179,16 +211,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const role = email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
-      const tier = 'free';
+      const tier = 'gold'; // Give gold access for 1 day
       
       // Save user to Firestore
       try {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const subscriptionEndDate = tomorrow.toISOString();
+
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           email,
           name,
           role,
           tier,
-          subscriptionEndDate: null,
+          subscriptionEndDate,
+          createdAt: new Date().toISOString()
+        });
+
+        // Get master password
+        let masterPassword = '';
+        try {
+          const configDoc = await getDoc(doc(db, 'config', 'globalConfig'));
+          if (configDoc.exists()) {
+            masterPassword = configDoc.data().currentPassword || '';
+          }
+        } catch (e) {
+          console.error("Failed to get master password", e);
+        }
+
+        // Send welcome message
+        await addDoc(collection(db, 'messages'), {
+          title: '가입을 환영합니다!',
+          content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 1일로 자동 설정되었습니다.`,
+          receiverId: userCredential.user.uid,
+          senderId: 'system',
+          senderName: '시스템 관리자',
+          isRead: false,
           createdAt: new Date().toISOString()
         });
       } catch (fsError: any) {

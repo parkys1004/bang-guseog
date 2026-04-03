@@ -86,6 +86,14 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
   const hasAccess = (requiredTier: string) => {
     if (user?.role === 'admin') return true;
     if (requiredTier === 'free') return true;
+    
+    // Check subscription expiration
+    if (user?.subscriptionEndDate && user.subscriptionEndDate !== 'unlimited') {
+      if (new Date(user.subscriptionEndDate) < new Date()) {
+        return false; // Expired
+      }
+    }
+
     if (requiredTier === 'silver' && (user?.tier === 'silver' || user?.tier === 'gold')) return true;
     if (requiredTier === 'gold' && user?.tier === 'gold') return true;
     return false;

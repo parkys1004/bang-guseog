@@ -45,7 +45,9 @@ export const AdvancedMaterialsPage: React.FC = () => {
     return <div className="min-h-screen flex items-center justify-center">로딩 중...</div>;
   }
 
-  if (!user || user.tier !== 'gold') {
+  const isExpired = user?.subscriptionEndDate && user.subscriptionEndDate !== 'unlimited' && new Date(user.subscriptionEndDate) < new Date();
+
+  if (!user || user.tier !== 'gold' || isExpired) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#020408] p-4">
         <div className="bg-white dark:bg-[#11141d] p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl text-center max-w-md">
