@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle, BookOpen } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle, BookOpen, ShoppingCart } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -475,7 +475,7 @@ const AppContent: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className={`mt-auto border-t py-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
+      <footer className={`mt-auto border-t py-8 pb-24 md:pb-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
          <div className="max-w-7xl mx-auto px-4 text-center">
              <p className={`text-xs transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-300'}`}>
                © 2026 방구석 작곡가. All rights reserved.
@@ -483,21 +483,53 @@ const AppContent: React.FC = () => {
          </div>
       </footer>
 
-      {/* KakaoTalk Open Chat Button */}
+      {/* Mobile Bottom Action Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white dark:bg-[#11141d] border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex p-2 gap-2 pb-safe">
+        <a
+          href="https://open.kakao.com/o/paYcDloi"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex flex-col items-center justify-center py-2 bg-[#FEE500] text-[#371D1E] rounded-xl font-bold text-xs gap-1"
+        >
+          <MessageCircle className="w-5 h-5 fill-current" />
+          카톡 문의
+        </a>
+        <button
+          onClick={() => {
+            setActivePage('guide');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="flex-1 flex flex-col items-center justify-center py-2 bg-blue-600 text-white rounded-xl font-bold text-xs gap-1"
+        >
+          <BookOpen className="w-5 h-5" />
+          이용 가이드
+        </button>
+        <a
+          href="https://kmong.com/self-marketing/730531/ZQh4nXZpK5"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex flex-col items-center justify-center py-2 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl font-bold text-xs gap-1"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          크몽 구매
+        </a>
+      </div>
+
+      {/* KakaoTalk Open Chat Button (Desktop) */}
       <a
         href="https://open.kakao.com/o/paYcDloi"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed top-1/2 -translate-y-1/2 right-6 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:scale-110 transition-all duration-300 flex items-center justify-center"
+        className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:scale-110 transition-all duration-300 items-center justify-center"
         aria-label="KakaoTalk Open Chat"
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
 
-      {/* Guide Button */}
+      {/* Guide Button (Desktop) */}
       <button
         onClick={() => setActivePage('guide')}
-        className="fixed top-1/2 translate-y-12 right-6 z-50 p-3.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-110 transition-all duration-300 flex items-center justify-center"
+        className="hidden md:flex fixed top-1/2 translate-y-12 right-6 z-50 p-3.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-110 transition-all duration-300 items-center justify-center"
         aria-label="이용 가이드"
       >
         <BookOpen className="w-6 h-6" />
@@ -506,7 +538,7 @@ const AppContent: React.FC = () => {
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
+        className={`fixed bottom-24 md:bottom-8 right-4 md:right-8 z-40 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
         }`}
         aria-label="Scroll to top"
