@@ -101,7 +101,7 @@ export const AdvancedMaterialsPage: React.FC = () => {
                 </div>
                 <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
                   <a
-                    href={material.contentUrl}
+                    href={user?.email ? `${material.contentUrl}${material.contentUrl.includes('?') ? '&' : '?'}u=${encodeURIComponent(user.email)}` : material.contentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors"

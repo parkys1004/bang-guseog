@@ -72,7 +72,15 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
       onOpenAuth();
       return;
     }
-    window.open(item.url, '_blank');
+    
+    let targetUrl = item.url;
+    if (user?.email) {
+      const encodedEmail = encodeURIComponent(user.email);
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      targetUrl = `${targetUrl}${separator}u=${encodedEmail}`;
+    }
+    
+    window.open(targetUrl, '_blank');
   };
 
   const hasAccess = (requiredTier: string) => {

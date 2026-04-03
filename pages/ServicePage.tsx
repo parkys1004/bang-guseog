@@ -143,7 +143,15 @@ export const ServicePage: React.FC = () => {
       alert(`${material.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
       return;
     }
-    window.open(material.url, '_blank');
+    
+    let targetUrl = material.url;
+    if (user?.email) {
+      const encodedEmail = encodeURIComponent(user.email);
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      targetUrl = `${targetUrl}${separator}u=${encodedEmail}`;
+    }
+    
+    window.open(targetUrl, '_blank');
   };
   return (
     <div className="min-h-screen bg-white dark:bg-[#020408] transition-colors duration-300">

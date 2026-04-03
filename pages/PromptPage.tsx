@@ -148,7 +148,15 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
       alert(`${material.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
       return;
     }
-    window.open(material.contentUrl, '_blank');
+    
+    let targetUrl = material.contentUrl;
+    if (user?.email) {
+      const encodedEmail = encodeURIComponent(user.email);
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      targetUrl = `${targetUrl}${separator}u=${encodedEmail}`;
+    }
+    
+    window.open(targetUrl, '_blank');
   };
 
   const dbPrompts = materials.map(m => ({
