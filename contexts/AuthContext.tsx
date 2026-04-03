@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } else {
             // First user or specific email becomes admin
             role = firebaseUser.email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
-            tier = 'gold'; // Give gold access for 1 day
+            tier = 'silver'; // Give silver access for 1 day
             
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -211,7 +211,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const role = email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
-      const tier = 'gold'; // Give gold access for 1 day
+      const tier = 'silver'; // Give silver access for 1 day
       
       // Save user to Firestore
       try {

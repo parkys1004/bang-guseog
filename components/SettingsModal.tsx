@@ -148,19 +148,27 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl bg-white dark:bg-[#0d1117] rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800"
+        className="relative w-full max-w-2xl bg-white dark:bg-[#0d1117] rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 max-h-[90vh] flex flex-col"
       >
-        <div className="flex h-[600px]">
+        <div className="flex flex-col md:flex-row h-full md:h-[600px] overflow-hidden">
           {/* Sidebar */}
-          <div className="w-64 bg-gray-50 dark:bg-[#161b22] border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col">
-            <div className="mb-8">
-              <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
-                계정 설정
-              </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-widest font-bold">Account Settings</p>
+          <div className="w-full md:w-64 bg-gray-50 dark:bg-[#161b22] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 p-4 md:p-6 flex flex-col shrink-0">
+            <div className="mb-4 md:mb-8 flex justify-between items-center md:block">
+              <div>
+                <h2 className="text-lg md:text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+                  계정 설정
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-widest font-bold hidden md:block">Account Settings</p>
+              </div>
+              <button 
+                onClick={onClose}
+                className="md:hidden p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
 
-            <nav className="space-y-2 flex-1">
+            <nav className="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 flex-1 scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -169,7 +177,7 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     setError(null);
                     setSuccess(null);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                  className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -179,28 +187,28 @@ export const SettingsModal: React.FC<Props> = ({ isOpen, onClose }) => {
                   {tab.label}
                 </button>
               ))}
+              <div className="hidden md:block flex-1" />
+              <button 
+                onClick={logout}
+                className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all whitespace-nowrap md:mt-auto"
+              >
+                <LogOut className="w-4 h-4" />
+                로그아웃
+              </button>
             </nav>
-
-            <button 
-              onClick={logout}
-              className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-              로그아웃
-            </button>
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-8 overflow-y-auto">
-            <div className="flex justify-between items-start mb-8">
+          <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+            <div className="flex justify-between items-start mb-6 md:mb-8">
               <div>
-                <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                <h3 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white">
                   {tabs.find(t => t.id === activeTab)?.label}
                 </h3>
               </div>
               <button 
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>

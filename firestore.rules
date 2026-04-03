@@ -120,21 +120,22 @@ service cloud.firestore {
     // Message rules
     match /messages/{messageId} {
       allow read: if isAuthenticated() && (
-        isAdmin() || 
         resource.data.receiverId == request.auth.uid || 
-        resource.data.senderId == request.auth.uid
+        resource.data.senderId == request.auth.uid ||
+        isAdmin()
       );
       allow create: if isAuthenticated() && (
-        isAdmin() || 
-        request.resource.data.senderId == request.auth.uid
+        request.resource.data.senderId == request.auth.uid ||
+        (request.resource.data.senderId == 'system' && request.resource.data.receiverId == request.auth.uid) ||
+        isAdmin()
       ) && isValidMessage(request.resource.data);
       allow update: if isAuthenticated() && (
-        isAdmin() || 
-        (resource.data.receiverId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']))
+        (resource.data.receiverId == request.auth.uid && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])) ||
+        isAdmin()
       ) && isValidMessage(request.resource.data);
       allow delete: if isAuthenticated() && (
-        isAdmin() || 
-        resource.data.receiverId == request.auth.uid
+        resource.data.receiverId == request.auth.uid ||
+        isAdmin()
       );
     }
 
