@@ -1,4 +1,5 @@
-// Cloudflare Pages Functions 규격
+// functions/api/auth/check.ts
+
 export const onRequestGet: PagesFunction<{
   FIREBASE_API_KEY: string;
   FIREBASE_PROJECT_ID: string;
@@ -6,7 +7,7 @@ export const onRequestGet: PagesFunction<{
   const { searchParams } = new URL(context.request.url);
   const email = searchParams.get('email');
 
-  // 환경 변수 로드 (Cloudflare 대시보드에 등록된 값)
+  // 환경 변수는 context.env에서 가져옵니다.
   const API_KEY = context.env.FIREBASE_API_KEY;
   const PROJECT_ID = context.env.FIREBASE_PROJECT_ID;
 
@@ -18,6 +19,7 @@ export const onRequestGet: PagesFunction<{
   }
 
   try {
+    // Firestore REST API 호출
     const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/:runQuery?key=${API_KEY}`;
     
     const queryResponse = await fetch(url, {
@@ -39,35 +41,35 @@ export const onRequestGet: PagesFunction<{
 
     const result: any = await queryResponse.json();
 
-    // 유저를 찾지 못한 경우
+    // 데이터가 없거나 문서가 없는 경우
     if (!result || result.length === 0 || !result[0].document) {
       return new Response(JSON.stringify({ canAccess: false, reason: 'user-not-found' }), {
-        status: 200, // 통신은 성공했으므로 200 반환
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*' // Vercel 앱 허용
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
     const fields = result[0].document.fields;
     const now = new Date();
     
-    // DB의 필드명(subscriptionEndDate, tier)이 정확해야 합니다.
+    // 파이어베이스 필드 데이터 추출
     const expiryDateStr = fields.subscriptionEndDate?.stringValue || fields.subscriptionEndDate?.timestampValue;
-    const tier = fields.tier?.stringValue || 'basic';
+    const tier = fields.tier?.stringValue || 'free';
+    const name = fields.name?.stringValue || 'Guest';
+
     const expiryDate = new Date(expiryDateStr);
-    
     const isExpired = now > expiryDate;
 
+    // 최종 결과 반환
     return new Response(JSON.stringify({
       canAccess: !isExpired,
       tier: tier,
-      reason: isExpired ? 'expired' : 'ok'
+      name: name,
+      reason: isExpired ? 'expired' : 'ok',
+      expiryDate: expiryDateStr
     }), {
       headers: { 
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*' 
+        'Access-Control-Allow-Origin': '*' // 다른 앱(Vercel)에서 호출 가능하도록 허용
       },
     });
 
