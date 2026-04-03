@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle, BookOpen } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -8,6 +8,7 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { RecommendedSitesPage } from './pages/RecommendedSitesPage';
+import { GuidePage } from './pages/GuidePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -32,7 +33,7 @@ const testConnection = async () => {
 
 testConnection();
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials';
 
 const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
@@ -157,6 +158,7 @@ const AppContent: React.FC = () => {
       case 'contact': return <ContactPage />;
       case 'faq': return <FAQPage />;
       case 'recommended': return <RecommendedSitesPage />;
+      case 'guide': return <GuidePage />;
       case 'user-dashboard': return <UserDashboard />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'advanced-materials': return <AdvancedMaterialsPage />;
@@ -491,6 +493,15 @@ const AppContent: React.FC = () => {
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
+
+      {/* Guide Button */}
+      <button
+        onClick={() => setActivePage('guide')}
+        className="fixed top-1/2 translate-y-12 right-6 z-50 p-3.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-110 transition-all duration-300 flex items-center justify-center"
+        aria-label="이용 가이드"
+      >
+        <BookOpen className="w-6 h-6" />
+      </button>
 
       {/* Scroll to Top Button */}
       <button
