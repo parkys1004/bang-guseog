@@ -119,6 +119,19 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // 카카오톡 인앱 브라우저 감지 및 외부 브라우저로 자동 이동
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.match(/kakaotalk/i)) {
+      setIsInAppBrowser(true);
+      // 카카오톡 인앱 브라우저에서 외부 브라우저(사파리/크롬)로 열기 시도
+      window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(window.location.href)}`;
+    } else if (userAgent.match(/instagram|facebook|line|naver/i)) {
+      setIsInAppBrowser(true);
+    }
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -168,6 +181,13 @@ const AppContent: React.FC = () => {
   return (
     <div className={`min-h-screen transition-colors duration-300 font-sans flex flex-col ${isDarkMode ? 'bg-[#020408] text-white' : 'bg-white text-gray-900'}`}>
       
+      {/* In-App Browser Warning Banner */}
+      {isInAppBrowser && (
+        <div className="bg-red-500 text-white px-4 py-3 text-sm text-center z-50 relative font-medium">
+          현재 앱 내장 브라우저를 사용 중입니다. 구글 로그인이 안 될 경우 <strong className="underline">우측 하단(또는 상단)의 메뉴 ⋯ 를 눌러 '다른 브라우저로 열기'</strong>를 선택해주세요.
+        </div>
+      )}
+
       {/* Top Navigation Bar */}
       <nav className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-300 ${isDarkMode ? 'bg-[#020408]/80 border-gray-800' : 'bg-white/80 border-gray-200'}`}>
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -466,7 +486,7 @@ const AppContent: React.FC = () => {
         href="https://open.kakao.com/o/paYcDloi"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
+        className="fixed top-1/2 -translate-y-1/2 right-6 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:scale-110 transition-all duration-300 flex items-center justify-center"
         aria-label="KakaoTalk Open Chat"
       >
         <MessageCircle className="w-6 h-6 fill-current" />
@@ -475,7 +495,7 @@ const AppContent: React.FC = () => {
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-[5.5rem] right-8 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
+        className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
         }`}
         aria-label="Scroll to top"
