@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight, Crown, Lock } from 'lucide-react';
+import { Monitor, Search, ChevronDown, BookOpen, Sparkles, FolderOpen, Globe, RefreshCw, ArrowRight, Crown, Lock, Info } from 'lucide-react';
 import { ContentItem, EbookItem } from '../types';
 import { servicesData } from './ServicePage';
 import { recommendedSites } from './RecommendedSitesPage';
@@ -163,10 +163,24 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
              방구석 음악만들기<br/>
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">SUNO V5 PRO</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors mb-10">
+          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors mb-6">
              AI Studio와 Suno로 시작하는 나만의 음악 제작 여정 관련 자료 포함,<br className="hidden md:block"/>
              빌더앱은 계속 업데이트됩니다.
           </p>
+
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-2xl p-4 max-w-2xl mx-auto mb-10 flex items-start gap-3 text-left shadow-sm">
+            <div className="mt-0.5 text-blue-600 dark:text-blue-400 shrink-0">
+              <Info className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm md:text-base font-bold text-blue-900 dark:text-blue-100">
+                가입 즉시 1일(24시간) 동안 실버 등급 전용 자료를 열람할 수 있습니다.
+              </p>
+              <p className="text-xs md:text-sm text-blue-700 dark:text-blue-300 mt-1">
+                기간이 만료되면 무료(Free) 자료만 열람 가능합니다.
+              </p>
+            </div>
+          </div>
 
           {/* Content Dashboard */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto mt-8">
