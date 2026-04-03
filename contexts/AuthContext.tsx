@@ -35,9 +35,9 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string, targetAppUrl?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
-  loginWithGoogle: (targetAppUrl?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   linkGoogleAccount: () => Promise<void>;
   unlinkGoogleAccount: () => Promise<void>;
   logout: () => Promise<void>;
@@ -124,29 +124,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  /**
-   * @param {string} email - 사용자 이메일
-   * @param {string} password - 사용자 비밀번호
-   * @param {string} targetAppUrl - 이동할 지점 앱의 주소 (기본값 설정 가능)
-   */
-  const login = async (email: string, password: string, targetAppUrl: string = "https://app-test-olive-sigma.vercel.app") => {
+  const login = async (email: string, password: string) => {
     try {
-      // 1. 본점 로그인 시도 (이메일/비번 방식)
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       if (!userCredential.user.emailVerified && userCredential.user.providerData[0]?.providerId === 'password') {
         await signOut(auth);
         throw new Error('auth/not-verified');
-      }
-
-      const user = userCredential.user;
-      if (user && user.email) {
-        // 2. 이메일 인코딩 (주소창 오류 방지)
-        const encodedEmail = encodeURIComponent(user.email);
-        
-        // 3. 선택한 지점 앱으로 이메일을 들고 자동 이동!
-        // 예: https://app1.vercel.app?u=gandi11@nate.com
-        window.location.href = `${targetAppUrl}?u=${encodedEmail}`;
       }
     } catch (error: any) {
       console.error("Login error details:", {
@@ -238,22 +222,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * @param {string} targetAppUrl - 이동할 지점 앱의 주소 (기본값 설정 가능)
-   */
-  const loginWithGoogle = async (targetAppUrl: string = "https://app-test-olive-sigma.vercel.app") => {
+  const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      
-      const user = userCredential.user;
-      if (user && user.email) {
-        // 2. 이메일 인코딩 (주소창 오류 방지)
-        const encodedEmail = encodeURIComponent(user.email);
-        
-        // 3. 선택한 지점 앱으로 이메일을 들고 자동 이동!
-        window.location.href = `${targetAppUrl}?u=${encodedEmail}`;
-      }
+      await signInWithPopup(auth, provider);
     } catch (error: any) {
       console.error("Google login error details:", {
         code: error.code,

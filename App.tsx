@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -461,10 +461,21 @@ const AppContent: React.FC = () => {
          </div>
       </footer>
 
+      {/* KakaoTalk Open Chat Button */}
+      <a
+        href="https://open.kakao.com/o/paYcDloi"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-8 right-8 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
+        aria-label="KakaoTalk Open Chat"
+      >
+        <MessageCircle className="w-6 h-6 fill-current" />
+      </a>
+
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-8 right-8 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
+        className={`fixed bottom-[5.5rem] right-8 z-50 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
         }`}
         aria-label="Scroll to top"
