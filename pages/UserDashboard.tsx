@@ -118,7 +118,7 @@ export const UserDashboard: React.FC = () => {
                 <h3 className="font-bold text-sm text-gray-700 dark:text-gray-300">회원전용 사용 기간</h3>
               </div>
               <p className={`text-sm font-bold ${
-                user.role === 'admin' 
+                user.role === 'admin' || user.subscriptionEndDate === 'unlimited'
                   ? 'text-purple-600 dark:text-purple-400' 
                   : (user.subscriptionEndDate && new Date(user.subscriptionEndDate) >= new Date() 
                       ? 'text-blue-600 dark:text-blue-400' 
@@ -126,9 +126,11 @@ export const UserDashboard: React.FC = () => {
               }`}>
                 {user.role === 'admin' 
                   ? '무제한 (관리자)' 
-                  : (user.subscriptionEndDate 
-                      ? `${new Date(user.subscriptionEndDate).toLocaleDateString()} 까지` 
-                      : '구독 필요')}
+                  : user.subscriptionEndDate === 'unlimited'
+                    ? '무제한'
+                    : (user.subscriptionEndDate 
+                        ? `${new Date(user.subscriptionEndDate).toLocaleDateString()} 까지` 
+                        : '구독 필요')}
               </p>
             </div>
             
