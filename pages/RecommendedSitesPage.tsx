@@ -34,7 +34,7 @@ export const recommendedSites: Site[] = [
   {
     name: 'Suno AI',
     description: '텍스트 프롬프트만으로 고품질의 음악과 보컬을 생성하는 AI 서비스입니다.',
-    url: 'https://suno.com',
+    url: 'https://suno.com/invite/@djdoberman',
     icon: <Music className="w-6 h-6" />,
     category: 'AI 음악'
   },

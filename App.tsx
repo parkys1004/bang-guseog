@@ -9,6 +9,8 @@ import { ContactPage } from './pages/ContactPage';
 import { FAQPage } from './pages/FAQPage';
 import { RecommendedSitesPage } from './pages/RecommendedSitesPage';
 import { GuidePage } from './pages/GuidePage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -33,7 +35,7 @@ const testConnection = async () => {
 
 testConnection();
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials' | 'privacy' | 'terms';
 
 const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
@@ -159,6 +161,8 @@ const AppContent: React.FC = () => {
       case 'faq': return <FAQPage />;
       case 'recommended': return <RecommendedSitesPage />;
       case 'guide': return <GuidePage />;
+      case 'privacy': return <PrivacyPolicyPage />;
+      case 'terms': return <TermsOfServicePage />;
       case 'user-dashboard': return <UserDashboard />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'advanced-materials': return <AdvancedMaterialsPage />;
@@ -476,8 +480,23 @@ const AppContent: React.FC = () => {
 
       {/* Footer */}
       <footer className={`mt-auto border-t py-8 pb-24 md:pb-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
-         <div className="max-w-7xl mx-auto px-4 text-center">
-             <p className={`text-xs transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-300'}`}>
+         <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
+             <div className="flex items-center gap-4 text-sm">
+               <button 
+                 onClick={() => { setActivePage('terms'); window.scrollTo(0,0); }} 
+                 className={`transition-colors hover:underline ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
+               >
+                 이용약관
+               </button>
+               <span className={isDarkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
+               <button 
+                 onClick={() => { setActivePage('privacy'); window.scrollTo(0,0); }} 
+                 className={`transition-colors hover:underline ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
+               >
+                 개인정보처리방침
+               </button>
+             </div>
+             <p className={`text-xs transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                © 2026 방구석 작곡가. All rights reserved.
              </p>
          </div>
