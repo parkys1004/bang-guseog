@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key, UserX } from 'lucide-react';
+import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key, UserX, Bell } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
 import { PROMPTS } from './PromptPage';
@@ -62,6 +62,10 @@ export const AdminDashboard: React.FC = () => {
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean, message: string }>({ isOpen: false, message: '' });
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean, message: string, onConfirm: () => void }>({ isOpen: false, message: '', onConfirm: () => {} });
 
+  // Notifications state
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
   // Master Password state
   const [currentMasterPassword, setCurrentMasterPassword] = useState('');
   const [newMasterPassword, setNewMasterPassword] = useState('');
@@ -96,8 +100,19 @@ export const AdminDashboard: React.FC = () => {
     if (user?.role === 'admin') {
       let unsubscribeUsers: () => void;
       let unsubscribeMaterials: () => void;
-
       let unsubscribeConfig: (() => void) | undefined;
+      let unsubscribeNotifications: () => void;
+
+      // Fetch admin notifications
+      const notifQuery = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+      unsubscribeNotifications = onSnapshot(notifQuery, (querySnapshot) => {
+        const notifs = querySnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as any))
+          .filter(msg => msg.receiverId === 'admin');
+        setNotifications(notifs);
+      }, (err) => {
+        console.error("Failed to fetch notifications:", err);
+      });
 
       if (activeTab === 'users') {
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -149,6 +164,7 @@ export const AdminDashboard: React.FC = () => {
         if (unsubscribeUsers) unsubscribeUsers();
         if (unsubscribeMaterials) unsubscribeMaterials();
         if (unsubscribeConfig) unsubscribeConfig();
+        if (unsubscribeNotifications) unsubscribeNotifications();
       };
     } else {
       setLoading(false);
@@ -586,6 +602,83 @@ export const AdminDashboard: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors relative"
+            >
+              <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                  {notifications.filter(n => !n.isRead).length}
+                </span>
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+                <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white">알림</h3>
+                  <button 
+                    onClick={async () => {
+                      const unreadNotifs = notifications.filter(n => !n.isRead);
+                      for (const notif of unreadNotifs) {
+                        try {
+                          await updateDoc(doc(db, 'messages', notif.id), { isRead: true });
+                        } catch (e) {
+                          console.error("Failed to mark as read", e);
+                        }
+                      }
+                    }}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    모두 읽음 처리
+                  </button>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                      새로운 알림이 없습니다.
+                    </div>
+                  ) : (
+                    notifications.map(notif => (
+                      <div 
+                        key={notif.id} 
+                        className={`p-3 border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${!notif.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className={`text-sm font-bold ${!notif.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                            {notif.title}
+                          </h4>
+                          <span className="text-[10px] text-gray-400">
+                            {new Date(notif.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {notif.content}
+                        </p>
+                        {!notif.isRead && (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await updateDoc(doc(db, 'messages', notif.id), { isRead: true });
+                              } catch (e) {
+                                console.error("Failed to mark as read", e);
+                              }
+                            }}
+                            className="text-[10px] text-blue-600 dark:text-blue-400 mt-2 hover:underline"
+                          >
+                            읽음 표시
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="bg-white dark:bg-gray-800/50 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex gap-1 mr-4">
             <button
               onClick={() => setActiveTab('users')}

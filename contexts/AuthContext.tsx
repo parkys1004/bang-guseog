@@ -120,6 +120,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } catch (e) {
               console.error("Failed to send welcome message", e);
             }
+
+            // Send admin notification
+            try {
+              await addDoc(collection(db, 'messages'), {
+                title: '🎉 신규 회원 가입 알림',
+                content: `${firebaseUser.displayName || '사용자'} (${firebaseUser.email}) 님이 새로 가입했습니다.`,
+                receiverId: 'admin',
+                senderId: firebaseUser.uid,
+                senderName: '시스템 알림',
+                isRead: false,
+                createdAt: new Date().toISOString()
+              });
+            } catch (e) {
+              console.error("Failed to send admin notification", e);
+            }
+
+            // Send Discord webhook notification
+            try {
+              const webhookUrl = 'https://discord.com/api/webhooks/1490519327223582950/eQDEhqz1AbmdsSdeifBJlvQY1dcbOjnVtCsdo1gFtqX2gjwSCWTJHI4ZEEFq71zJJvtv';
+              await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  embeds: [{
+                    title: "🎉 신규 회원 가입 알림",
+                    description: "방구석 작곡가 서비스에 새로운 회원이 가입했습니다.",
+                    color: 3447003, // Blue color
+                    fields: [
+                      { name: "이름", value: firebaseUser.displayName || '사용자', inline: true },
+                      { name: "이메일", value: firebaseUser.email || '이메일 없음', inline: true }
+                    ],
+                    timestamp: new Date().toISOString()
+                  }]
+                })
+              });
+            } catch (e) {
+              console.error("Failed to send Discord notification", e);
+            }
           }
 
           setUser({
