@@ -182,9 +182,16 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
-  const handleKickUser = (userId: string) => {
+  const handleKickUser = (userId: string, email: string) => {
     showConfirm('정말로 이 회원을 강퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.', async () => {
       try {
+        if (email) {
+          await setDoc(doc(db, 'deleted_users', email), {
+            email,
+            deletedAt: new Date().toISOString(),
+            reason: 'kicked'
+          });
+        }
         await deleteDoc(doc(db, 'users', userId));
         showAlert('회원이 강퇴되었습니다.');
       } catch (err) {
@@ -1047,7 +1054,7 @@ export const AdminDashboard: React.FC = () => {
                           <Mail className="w-4 h-4" />
                         </a>
                         <button
-                          onClick={() => handleKickUser(u.id)}
+                          onClick={() => handleKickUser(u.id, u.email)}
                           className="p-2 text-red-500 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="회원 강퇴"
                         >

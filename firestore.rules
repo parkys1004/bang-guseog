@@ -106,6 +106,14 @@ service cloud.firestore {
              isValidDateString(data.createdAt);
     }
 
+    // DeletedUser validation
+    function isValidDeletedUser(data) {
+      return data.keys().hasAll(['email', 'deletedAt', 'reason']) &&
+             data.email is string && isValidEmail(data.email) &&
+             data.reason in ['withdrawal', 'kicked'] &&
+             isValidDateString(data.deletedAt);
+    }
+
     // User rules
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
@@ -149,6 +157,13 @@ service cloud.firestore {
     // Config rules
     match /config/{configId} {
       allow read, write: if isAdmin();
+    }
+
+    // Deleted users rules
+    match /deleted_users/{email} {
+      allow read: if true;
+      allow create: if isAuthenticated() && (isAdmin() || request.auth.token.email == email) && isValidDeletedUser(request.resource.data);
+      allow update, delete: if isAdmin();
     }
   }
 }

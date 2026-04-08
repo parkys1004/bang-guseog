@@ -44,6 +44,17 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["title", "description", "contentUrl", "category", "requiredTier", "authorId", "createdAt"]
+    },
+    "DeletedUser": {
+      "title": "DeletedUser",
+      "description": "Records of deleted or kicked users to prevent immediate re-registration",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "deletedAt": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string", "enum": ["withdrawal", "kicked"] }
+      },
+      "required": ["email", "deletedAt", "reason"]
     }
   },
   "firestore": {
@@ -58,6 +69,10 @@
     "/materials/{materialId}": {
       "schema": "Material",
       "description": "Materials uploaded by admin"
+    },
+    "/deleted_users/{email}": {
+      "schema": "DeletedUser",
+      "description": "Records of deleted users"
     }
   }
 }

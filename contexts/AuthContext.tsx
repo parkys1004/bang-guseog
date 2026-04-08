@@ -66,6 +66,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        if (firebaseUser.email) {
+          try {
+            const deletedUserDoc = await getDoc(doc(db, 'deleted_users', firebaseUser.email));
+            if (deletedUserDoc.exists()) {
+              const deletedAt = new Date(deletedUserDoc.data().deletedAt);
+              const now = new Date();
+              const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+              if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
+                await signOut(auth);
+                setUser(null);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (e) {
+            console.error("Error checking ban status in auth state changed", e);
+          }
+        }
+
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userDocRef);
@@ -245,6 +264,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, name: string) => {
     try {
+      const deletedUserDoc = await getDoc(doc(db, 'deleted_users', email));
+      if (deletedUserDoc.exists()) {
+        const deletedAt = new Date(deletedUserDoc.data().deletedAt);
+        const now = new Date();
+        const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+        if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
+          const remainingMillis = sevenDaysInMillis - (now.getTime() - deletedAt.getTime());
+          const remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+          throw new Error(`탈퇴 또는 강퇴된 계정입니다. ${remainingDays}일 후에 재가입이 가능합니다.`);
+        }
+      }
+
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, {
         displayName: name
@@ -307,6 +338,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: error.message,
         stack: error.stack
       });
+      if (error.message.includes('탈퇴 또는 강퇴된 계정입니다')) {
+        throw error;
+      }
       if (error.message === 'auth/verification-sent') {
         throw new Error('가입하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.');
       }
@@ -323,13 +357,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      if (result.user.email) {
+        const deletedUserDoc = await getDoc(doc(db, 'deleted_users', result.user.email));
+        if (deletedUserDoc.exists()) {
+          const deletedAt = new Date(deletedUserDoc.data().deletedAt);
+          const now = new Date();
+          const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+          if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
+            const remainingMillis = sevenDaysInMillis - (now.getTime() - deletedAt.getTime());
+            const remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+            
+            await result.user.delete().catch(() => signOut(auth));
+            throw new Error(`탈퇴 또는 강퇴된 계정입니다. ${remainingDays}일 후에 재가입이 가능합니다.`);
+          }
+        }
+      }
     } catch (error: any) {
       console.error("Google login error details:", {
         code: error.code,
         message: error.message,
         stack: error.stack
       });
+      if (error.message.includes('탈퇴 또는 강퇴된 계정입니다')) {
+        throw error;
+      }
       if (error.code === 'auth/unauthorized-domain') {
         throw new Error('인증되지 않은 도메인입니다. 관리자에게 문의하세요.');
       }
@@ -474,8 +527,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
     
     const uid = auth.currentUser.uid;
+    const email = auth.currentUser.email;
     
     try {
+      if (email) {
+        await setDoc(doc(db, 'deleted_users', email), {
+          email,
+          deletedAt: new Date().toISOString(),
+          reason: 'withdrawal'
+        });
+      }
+
       // Delete from Firestore first
       await deleteDoc(doc(db, 'users', uid));
       
