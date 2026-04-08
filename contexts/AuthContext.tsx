@@ -68,7 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (firebaseUser.email) {
           try {
-            const deletedUserDoc = await getDoc(doc(db, 'deleted_users', firebaseUser.email));
+            const normalizedEmail = firebaseUser.email.toLowerCase();
+            const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
             if (deletedUserDoc.exists()) {
               const deletedAt = new Date(deletedUserDoc.data().deletedAt);
               const now = new Date();
@@ -264,7 +265,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, name: string) => {
     try {
-      const deletedUserDoc = await getDoc(doc(db, 'deleted_users', email));
+      const normalizedEmail = email.toLowerCase();
+      const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
       if (deletedUserDoc.exists()) {
         const deletedAt = new Date(deletedUserDoc.data().deletedAt);
         const now = new Date();
@@ -360,7 +362,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithPopup(auth, provider);
       
       if (result.user.email) {
-        const deletedUserDoc = await getDoc(doc(db, 'deleted_users', result.user.email));
+        const normalizedEmail = result.user.email.toLowerCase();
+        const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
         if (deletedUserDoc.exists()) {
           const deletedAt = new Date(deletedUserDoc.data().deletedAt);
           const now = new Date();
@@ -531,8 +534,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       if (email) {
-        await setDoc(doc(db, 'deleted_users', email), {
-          email,
+        const normalizedEmail = email.toLowerCase();
+        await setDoc(doc(db, 'deleted_users', normalizedEmail), {
+          email: normalizedEmail,
           deletedAt: new Date().toISOString(),
           reason: 'withdrawal'
         });

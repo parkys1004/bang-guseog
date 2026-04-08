@@ -186,14 +186,19 @@ export const AdminDashboard: React.FC = () => {
     showConfirm('정말로 이 회원을 강퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.', async () => {
       try {
         if (email) {
-          await setDoc(doc(db, 'deleted_users', email), {
-            email,
+          const normalizedEmail = email.toLowerCase();
+          await setDoc(doc(db, 'deleted_users', normalizedEmail), {
+            email: normalizedEmail,
             deletedAt: new Date().toISOString(),
             reason: 'kicked'
           });
+        } else {
+          showAlert('이메일 정보가 없어 재가입 차단(7일) 목록에 추가하지 못했습니다. (단순 강퇴만 처리됨)');
         }
         await deleteDoc(doc(db, 'users', userId));
-        showAlert('회원이 강퇴되었습니다.');
+        if (email) {
+          showAlert('회원이 강퇴되었으며, 7일간 재가입이 제한됩니다.');
+        }
       } catch (err) {
         handleFirestoreError(err, 'delete', `users/${userId}`);
         showAlert('회원 강퇴에 실패했습니다.');
