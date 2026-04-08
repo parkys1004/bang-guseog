@@ -102,6 +102,13 @@ export const recommendedSites: Site[] = [
     category: 'AI 개발'
   },
   {
+    name: 'Hugging Face',
+    description: '수많은 오픈소스 AI 모델과 데이터셋이 모여있는 커뮤니티로, 최신 AI 기술을 탐색하고 활용하기에 최적입니다.',
+    url: 'https://huggingface.co',
+    icon: <Code className="w-6 h-6" />,
+    category: 'AI 개발'
+  },
+  {
     name: 'DistroKid',
     description: '저렴한 연회비로 무제한 음원 발매가 가능한 글로벌 음원 유통사입니다. 개인 작업자에게 가장 인기가 많습니다.',
     url: 'https://distrokid.com',
