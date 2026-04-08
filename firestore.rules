@@ -162,7 +162,7 @@ service cloud.firestore {
     // Deleted users rules
     match /deleted_users/{email} {
       allow read: if true;
-      allow create: if isAuthenticated() && (isAdmin() || request.auth.token.email == email) && isValidDeletedUser(request.resource.data);
+      allow create: if isAuthenticated() && (isAdmin() || request.auth.token.email.lower() == email) && isValidDeletedUser(request.resource.data);
       allow update, delete: if isAdmin();
     }
   }

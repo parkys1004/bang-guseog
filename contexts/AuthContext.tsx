@@ -218,6 +218,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      const normalizedEmail = email.toLowerCase();
+      const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
+      if (deletedUserDoc.exists()) {
+        const deletedAt = new Date(deletedUserDoc.data().deletedAt);
+        const now = new Date();
+        const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+        if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
+          const remainingMillis = sevenDaysInMillis - (now.getTime() - deletedAt.getTime());
+          const remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+          throw new Error(`탈퇴 또는 강퇴된 계정입니다. ${remainingDays}일 후에 로그인이 가능합니다.`);
+        }
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       if (!userCredential.user.emailVerified && userCredential.user.providerData[0]?.providerId === 'password') {
@@ -230,6 +243,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: error.message,
         stack: error.stack
       });
+      if (error.message.includes('탈퇴 또는 강퇴된 계정입니다')) {
+        throw error;
+      }
       if (error.message === 'auth/not-verified') {
         throw new Error('이메일 인증이 완료되지 않았습니다. 가입하신 이메일의 메일함을 확인해주세요.');
       }
