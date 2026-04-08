@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
           manifest: {
             name: '방구석 음악만들기 사이트',
             short_name: '방구석음악',
-            description: 'AI Studio와 Suno로 시작하는 나만의 음악 제작 여정',
+            description: 'Suno로 시작하는 나만의 음악 제작 여정',
             theme_color: '#020408',
             background_color: '#020408',
             display: 'standalone',

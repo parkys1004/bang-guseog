@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle, BookOpen, ShoppingCart } from 'lucide-react';
+import { Menu, Layout, Sun, Moon, Lock, ShieldCheck, ArrowUp, User as UserIcon, LogOut, Settings, Crown, MessageCircle, BookOpen, ShoppingCart, Download, Smartphone } from 'lucide-react';
 import { ShowcasePage } from './pages/ShowcasePage';
 import { EbookPage } from './pages/EbookPage';
 import { PromptPage } from './pages/PromptPage';
@@ -46,6 +46,51 @@ const AppContent: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
+
+  // PWA Install logic
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    // Check if already in standalone mode
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+      setIsStandalone(true);
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setDeferredPrompt(null);
+      setIsStandalone(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      // If no prompt, but user wants to "View in App", we just tell them how or try to redirect
+      // In reality, if they are in a browser and it's already installed, 
+      // there's no easy way to trigger it via JS. 
+      // We'll show a message or just refresh.
+      alert('이미 앱이 설치되어 있거나, 브라우저 설정에서 앱을 열 수 있습니다.');
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Fetch unread messages count
   useEffect(() => {
@@ -224,6 +269,21 @@ const AppContent: React.FC = () => {
 
             {/* Icons / Actions */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                {/* PWA Install Button */}
+                {!isStandalone && (
+                  <button
+                    onClick={handleInstallClick}
+                    className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                      deferredPrompt 
+                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    {deferredPrompt ? <Download className="w-4 h-4" /> : <Smartphone className="w-4 h-4" />}
+                    {deferredPrompt ? '앱 설치' : '앱으로 보기'}
+                  </button>
+                )}
+
                {/* Tier Badge */}
                <button
                  onClick={() => {
@@ -413,6 +473,21 @@ const AppContent: React.FC = () => {
                   로그인 / 회원가입
                 </button>
               )}
+
+               {/* Mobile PWA Install Button */}
+               {!isStandalone && (
+                 <button
+                   onClick={handleInstallClick}
+                   className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold transition-all ${
+                     deferredPrompt
+                       ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                       : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+                   }`}
+                 >
+                   {deferredPrompt ? <Download className="w-5 h-5" /> : <Smartphone className="w-5 h-5" />}
+                   {deferredPrompt ? '앱 설치하기' : '앱으로 보기'}
+                 </button>
+               )}
 
               {/* Mobile Tier Badge */}
               <button

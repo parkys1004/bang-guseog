@@ -119,7 +119,7 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
             <Crown className="w-3.5 h-3.5" />
             <span>Premium Member Only</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 leading-tight transition-colors">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-6 leading-[1.4] transition-colors">
             AI 음악 제작의 모든 것<br />
             전문가의 노하우를 담은 전자책
           </h1>
