@@ -40,10 +40,11 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 interface Props {
   onOpenAuth: () => void;
+  onOpenAccessDenied: (type: 'expired' | 'tier-low' | 'login-required', tier?: string) => void;
   onNavigate: (page: any) => void;
 }
 
-export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
+export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, onNavigate }) => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('전체');
@@ -136,10 +137,22 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onNavigate }) => {
   });
 
   const handleCardClick = (item: ContentItem | EbookItem) => {
-    if (item.isPro && !hasAccess(item.requiredTier)) {
-      alert(`${item.requiredTier === 'gold' ? '골드' : '실버'} 등급 이상 회원만 열람 가능합니다.`);
-      onOpenAuth();
-      return;
+    if (item.isPro) {
+      if (!user) {
+        onOpenAccessDenied('login-required');
+        return;
+      }
+
+      const isExpired = user?.subscriptionEndDate && user.subscriptionEndDate !== 'unlimited' && new Date(user.subscriptionEndDate) < new Date();
+      if (isExpired) {
+        onOpenAccessDenied('expired');
+        return;
+      }
+
+      if (!hasAccess(item.requiredTier)) {
+        onOpenAccessDenied('tier-low', item.requiredTier);
+        return;
+      }
     }
     
     let targetUrl = item.url;

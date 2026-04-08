@@ -45,6 +45,7 @@ interface PromptItem {
 
 interface Props {
   onOpenAuth: () => void;
+  onOpenAccessDenied: (type: 'expired' | 'tier-low' | 'login-required', tier?: string) => void;
 }
 
 export const PROMPTS: PromptItem[] = [
@@ -94,7 +95,7 @@ export const PROMPTS: PromptItem[] = [
 
 const CATEGORIES = ['전체', '🎵 음악/가사', '🎬 유튜브/영상', '📝 블로그/SEO', '📈 마케팅/카피', '💡 아이디어/기획', '🎨 이미지/디자인'];
 
-export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
+export const PromptPage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied }) => {
   const { user } = useAuth();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('전체');
@@ -126,9 +127,22 @@ export const PromptPage: React.FC<Props> = ({ onOpenAuth }) => {
   }, []);
 
   const handleCopy = (item: PromptItem) => {
-    if (item.isPro && !hasAccess(item.requiredTier || 'free')) {
-      onOpenAuth();
-      return;
+    if (item.isPro) {
+      if (!user) {
+        onOpenAccessDenied('login-required');
+        return;
+      }
+
+      const isExpired = user?.subscriptionEndDate && user.subscriptionEndDate !== 'unlimited' && new Date(user.subscriptionEndDate) < new Date();
+      if (isExpired) {
+        onOpenAccessDenied('expired');
+        return;
+      }
+
+      if (!hasAccess(item.requiredTier || 'free')) {
+        onOpenAccessDenied('tier-low', item.requiredTier);
+        return;
+      }
     }
     navigator.clipboard.writeText(item.prompt);
     setCopiedId(item.id);

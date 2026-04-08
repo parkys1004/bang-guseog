@@ -37,9 +37,10 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 interface Props {
   onOpenAuth: () => void;
+  onOpenAccessDenied: (type: 'expired' | 'tier-low' | 'login-required', tier?: string) => void;
 }
 
-export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
+export const EbookPage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied }) => {
   const { user } = useAuth();
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,9 +69,22 @@ export const EbookPage: React.FC<Props> = ({ onOpenAuth }) => {
     return () => unsubscribe();
   }, []);
   const handleCardClick = (item: EbookItem) => {
-    if (item.isPro && !hasAccess(item.requiredTier || 'gold')) {
-      onOpenAuth();
-      return;
+    if (item.isPro) {
+      if (!user) {
+        onOpenAccessDenied('login-required');
+        return;
+      }
+
+      const isExpired = user?.subscriptionEndDate && user.subscriptionEndDate !== 'unlimited' && new Date(user.subscriptionEndDate) < new Date();
+      if (isExpired) {
+        onOpenAccessDenied('expired');
+        return;
+      }
+
+      if (!hasAccess(item.requiredTier || 'gold')) {
+        onOpenAccessDenied('tier-low', item.requiredTier);
+        return;
+      }
     }
     
     let targetUrl = item.url;

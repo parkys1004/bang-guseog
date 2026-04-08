@@ -4,7 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 
-export const AdvancedMaterialsPage: React.FC = () => {
+interface Props {
+  onNavigate?: (page: any) => void;
+}
+
+export const AdvancedMaterialsPage: React.FC<Props> = ({ onNavigate }) => {
   const { user } = useAuth();
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,10 +56,28 @@ export const AdvancedMaterialsPage: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#020408] p-4">
         <div className="bg-white dark:bg-[#11141d] p-8 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl text-center max-w-md">
           <Lock className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-          <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-4">접근 제한</h1>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-4">
+            {isExpired ? '이용 기간 만료' : '접근 제한'}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-8">
-            이 페이지는 '골드' 등급 회원만 접근할 수 있습니다.
-            등급을 확인하거나 관리자에게 문의하세요.
+            {isExpired 
+              ? '회원님의 이용 기간이 만료되었습니다. 계속 이용하시려면 기간 연장이 필요합니다.' 
+              : '이 페이지는 \'골드\' 등급 회원만 접근할 수 있습니다. 등급을 확인하거나 관리자에게 문의하세요.'}
+          </p>
+          <button 
+            onClick={() => window.open('https://kmong.com/self-marketing/730531/ZQh4nXZpK5', '_blank')}
+            className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors mb-3"
+          >
+            이용권 구매/연장하기
+          </button>
+          <button 
+            onClick={() => onNavigate ? onNavigate('showcase') : window.location.href = '/'}
+            className="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-colors mb-4"
+          >
+            홈으로 돌아가기
+          </button>
+          <p className="text-xs text-gray-500">
+            문의: <a href="https://open.kakao.com/o/sA1vVTbi" target="_blank" rel="noopener noreferrer" className="underline">카카오톡 1:1 문의</a>
           </p>
         </div>
       </div>

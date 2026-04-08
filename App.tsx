@@ -14,6 +14,7 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
+import { AccessModal } from './components/AccessModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdvancedMaterialsPage } from './pages/AdvancedMaterialsPage';
@@ -43,6 +44,9 @@ const AppContent: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [accessModalType, setAccessModalType] = useState<'expired' | 'tier-low' | 'login-required'>('login-required');
+  const [requiredTier, setRequiredTier] = useState<string>('');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
@@ -190,16 +194,23 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleOpenAccessDenied = (type: 'expired' | 'tier-low' | 'login-required', tier?: string) => {
+    setAccessModalType(type);
+    setRequiredTier(tier || '');
+    setIsAccessModalOpen(true);
+  };
+
   const renderContent = () => {
     switch (activePage) {
       case 'showcase': return (
         <ShowcasePage 
           onOpenAuth={handleOpenAuth} 
+          onOpenAccessDenied={handleOpenAccessDenied}
           onNavigate={setActivePage}
         />
       );
-      case 'ebook': return <EbookPage onOpenAuth={handleOpenAuth} />;
-      case 'prompt': return <PromptPage onOpenAuth={handleOpenAuth} />;
+      case 'ebook': return <EbookPage onOpenAuth={handleOpenAuth} onOpenAccessDenied={handleOpenAccessDenied} />;
+      case 'prompt': return <PromptPage onOpenAuth={handleOpenAuth} onOpenAccessDenied={handleOpenAccessDenied} />;
       case 'service': return <ServicePage />;
       case 'about': return <AboutPage />;
       case 'contact': return <ContactPage />;
@@ -210,10 +221,11 @@ const AppContent: React.FC = () => {
       case 'terms': return <TermsOfServicePage />;
       case 'user-dashboard': return <UserDashboard />;
       case 'admin-dashboard': return <AdminDashboard />;
-      case 'advanced-materials': return <AdvancedMaterialsPage />;
+      case 'advanced-materials': return <AdvancedMaterialsPage onNavigate={setActivePage} />;
       default: return (
         <ShowcasePage 
           onOpenAuth={handleOpenAuth} 
+          onOpenAccessDenied={handleOpenAccessDenied}
           onNavigate={setActivePage}
         />
       );
@@ -553,6 +565,13 @@ const AppContent: React.FC = () => {
         onClose={() => setIsSettingsModalOpen(false)}
       />
 
+      <AccessModal 
+        isOpen={isAccessModalOpen}
+        onClose={() => setIsAccessModalOpen(false)}
+        type={accessModalType}
+        requiredTier={requiredTier}
+      />
+
       {/* Footer */}
       <footer className={`mt-auto border-t py-8 pb-24 md:pb-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
@@ -580,7 +599,7 @@ const AppContent: React.FC = () => {
       {/* Mobile Bottom Action Bar */}
       <div className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white dark:bg-[#11141d] border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex p-2 gap-2 pb-safe">
         <a
-          href="https://open.kakao.com/o/paYcDloi"
+          href="https://open.kakao.com/o/sA1vVTbi"
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex flex-col items-center justify-center py-2 bg-[#FEE500] text-[#371D1E] rounded-xl font-bold text-xs gap-1"
@@ -611,7 +630,7 @@ const AppContent: React.FC = () => {
 
       {/* KakaoTalk Open Chat Button (Desktop) */}
       <a
-        href="https://open.kakao.com/o/paYcDloi"
+        href="https://open.kakao.com/o/sA1vVTbi"
         target="_blank"
         rel="noopener noreferrer"
         className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:scale-110 transition-all duration-300 items-center justify-center"
