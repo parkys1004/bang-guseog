@@ -286,10 +286,8 @@ const AppContent: React.FC = () => {
               className="flex items-center gap-2 cursor-pointer shrink-0" 
               onClick={() => setActivePage('showcase')}
             >
-              <div className="bg-black dark:bg-white text-white dark:text-black p-2 rounded-lg transition-colors">
-                <Layout className="w-5 h-5" />
-              </div>
-              <span className={`text-xl font-black tracking-tighter transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>방구석 작곡가</span>
+              <img src="/logo.png" alt="방구석 작곡가 로고" className="h-10 w-auto object-contain rounded-md bg-white p-1" />
+              <span className={`text-xl font-black tracking-tighter transition-colors hidden sm:block ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>방구석 작곡가</span>
             </div>
 
             {/* Desktop Nav Links */}
