@@ -176,10 +176,16 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, 
              방구석 <br className="md:hidden" />음악만들기<br/>
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">SUNO V5.5 PRO</span>
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors mb-6">
-             방구석 작곡가는 누구나 쉽게 AI를 활용하여 나만의 음악을 만들 수 있도록 돕는 플랫폼입니다.<br className="hidden md:block"/>
-             Suno 등 AI 음악 생성 도구 활용법, 전자책, 프롬프트, 웹 빌더 앱 등 다양한 음악 제작 리소스를 제공합니다.
-          </p>
+          <div className="max-w-2xl mx-auto mb-8 space-y-3">
+            <p className="text-gray-700 dark:text-gray-300 text-lg md:text-xl font-medium leading-relaxed transition-colors">
+              <strong className="text-gray-900 dark:text-white font-bold">방구석 작곡가</strong>는 누구나 쉽게 AI를 활용하여<br className="hidden md:block"/>
+              나만의 음악을 만들 수 있도록 돕는 플랫폼입니다.
+            </p>
+            <p className="text-gray-500 dark:text-gray-400 text-base leading-relaxed transition-colors">
+              Suno 등 AI 음악 생성 도구 활용법, <span className="text-gray-700 dark:text-gray-300 font-medium">전자책</span>, <span className="text-gray-700 dark:text-gray-300 font-medium">프롬프트</span>, <span className="text-gray-700 dark:text-gray-300 font-medium">웹 빌더 앱</span> 등<br className="hidden md:block"/>
+              다양한 음악 제작 리소스를 제공합니다.
+            </p>
+          </div>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-2xl p-4 max-w-2xl mx-auto mb-10 flex items-start gap-3 text-left shadow-sm">
             <div className="mt-0.5 text-blue-600 dark:text-blue-400 shrink-0">
