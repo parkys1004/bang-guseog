@@ -177,8 +177,8 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, 
              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">SUNO V5.5 PRO</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed transition-colors mb-6">
-             Suno로 시작하는 나만의 음악 제작 여정 관련 자료 포함,<br className="hidden md:block"/>
-             빌더앱은 계속 업데이트됩니다.
+             방구석 작곡가는 누구나 쉽게 AI를 활용하여 나만의 음악을 만들 수 있도록 돕는 플랫폼입니다.<br className="hidden md:block"/>
+             Suno 등 AI 음악 생성 도구 활용법, 전자책, 프롬프트, 웹 빌더 앱 등 다양한 음악 제작 리소스를 제공합니다.
           </p>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-2xl p-4 max-w-2xl mx-auto mb-10 flex items-start gap-3 text-left shadow-sm">
