@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => {
           registerType: 'autoUpdate',
           includeAssets: ['icon.svg'],
           manifest: {
-            name: '방구석 음악만들기 사이트',
-            short_name: '방구석음악',
+            name: '방구석 작곡가',
+            short_name: '방구석 작곡가',
             description: 'Suno로 시작하는 나만의 음악 제작 여정',
             theme_color: '#020408',
             background_color: '#020408',
