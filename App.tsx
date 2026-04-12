@@ -145,6 +145,32 @@ const AppContent: React.FC = () => {
     return () => unsubscribe();
   }, [user]);
 
+  // Handle URL hash for direct linking
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide'].includes(hash)) {
+        setActivePage(hash as Page);
+      }
+    };
+
+    // Check initial hash
+    handleHashChange();
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Update hash when activePage changes
+  useEffect(() => {
+    if (['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide'].includes(activePage)) {
+      window.location.hash = activePage;
+    } else if (window.location.hash) {
+      // Clear hash for main pages like showcase
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [activePage]);
+
   // Sync dark mode with document class for Tailwind dark: variants
   useEffect(() => {
     if (isDarkMode) {
@@ -576,19 +602,21 @@ const AppContent: React.FC = () => {
       <footer className={`mt-auto border-t py-8 pb-24 md:pb-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
              <div className="flex items-center gap-4 text-sm">
-               <button 
-                 onClick={() => { setActivePage('terms'); window.scrollTo(0,0); }} 
+               <a 
+                 href="#terms"
+                 onClick={(e) => { e.preventDefault(); setActivePage('terms'); window.scrollTo(0,0); }} 
                  className={`transition-colors hover:underline ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
                >
                  이용약관
-               </button>
+               </a>
                <span className={isDarkMode ? 'text-gray-700' : 'text-gray-300'}>|</span>
-               <button 
-                 onClick={() => { setActivePage('privacy'); window.scrollTo(0,0); }} 
+               <a 
+                 href="#privacy"
+                 onClick={(e) => { e.preventDefault(); setActivePage('privacy'); window.scrollTo(0,0); }} 
                  className={`transition-colors hover:underline ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}
                >
                  개인정보처리방침
-               </button>
+               </a>
              </div>
              <p className={`text-xs transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                © 2026 방구석 작곡가. All rights reserved.
