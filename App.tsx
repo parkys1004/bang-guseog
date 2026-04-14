@@ -294,7 +294,7 @@ const AppContent: React.FC = () => {
               className="flex items-center gap-2 cursor-pointer shrink-0" 
               onClick={() => setActivePage('showcase')}
             >
-              <img src={logoImg} alt="방구석 작곡가 로고" className="h-10 w-auto object-contain rounded-md bg-white p-1" />
+              <img src="https://github.com/parkys1004/bang-guseog/blob/main/public/logo.png?raw=true" alt="방구석 작곡가 로고" className="h-10 w-auto object-contain rounded-md bg-white p-1" />
               <span className={`text-xl font-black tracking-tighter transition-colors hidden sm:block ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>방구석 작곡가</span>
             </div>
 
@@ -706,8 +706,6 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
-
-import logoImg from './src/logo.png';
 
 const App: React.FC = () => {
   return (
