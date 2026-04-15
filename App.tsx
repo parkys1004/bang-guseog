@@ -272,20 +272,17 @@ const AppContent: React.FC = () => {
     { id: 'faq', label: 'FAQ' },
   ];
 
-  const isIndependentPage = activePage === 'privacy' || activePage === 'terms';
-
   return (
     <div className={`min-h-screen transition-colors duration-300 font-sans flex flex-col ${isDarkMode ? 'bg-[#020408] text-white' : 'bg-white text-gray-900'}`}>
       
       {/* In-App Browser Warning Banner */}
-      {isInAppBrowser && !isIndependentPage && (
+      {isInAppBrowser && (
         <div className="bg-red-500 text-white px-4 py-3 text-sm text-center z-50 relative font-medium">
           현재 앱 내장 브라우저를 사용 중입니다. 구글 로그인이 안 될 경우 <strong className="underline">우측 하단(또는 상단)의 메뉴 ⋯ 를 눌러 '다른 브라우저로 열기'</strong>를 선택해주세요.
         </div>
       )}
 
       {/* Top Navigation Bar */}
-      {!isIndependentPage && (
       <nav className={`sticky top-0 z-40 backdrop-blur-md border-b transition-colors duration-300 ${isDarkMode ? 'bg-[#020408]/80 border-gray-800' : 'bg-white/80 border-gray-200'}`}>
         <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
           <div className="flex justify-between items-center h-16">
@@ -571,7 +568,6 @@ const AppContent: React.FC = () => {
           </div>
         )}
       </nav>
-      )}
 
       {/* Main Content Area */}
       <div className="flex-1">
@@ -606,7 +602,6 @@ const AppContent: React.FC = () => {
       />
 
       {/* Footer */}
-      {!isIndependentPage && (
       <footer className={`mt-auto border-t py-8 pb-24 md:pb-8 transition-colors ${isDarkMode ? 'bg-[#020408] border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
          <div className="max-w-7xl mx-auto px-4 flex flex-col items-center gap-4">
              <div className="flex items-center gap-4 text-sm">
@@ -631,10 +626,8 @@ const AppContent: React.FC = () => {
              </p>
          </div>
       </footer>
-      )}
 
       {/* Mobile Bottom Action Bar */}
-      {!isIndependentPage && (
       <div className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white dark:bg-[#11141d] border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex p-2 gap-2 pb-safe">
         <a
           href="https://open.kakao.com/o/sA1vVTbi"
@@ -665,10 +658,8 @@ const AppContent: React.FC = () => {
           크몽 구매
         </a>
       </div>
-      )}
 
       {/* KakaoTalk Open Chat Button (Desktop) */}
-      {!isIndependentPage && (
       <a
         href="https://open.kakao.com/o/sA1vVTbi"
         target="_blank"
@@ -678,10 +669,8 @@ const AppContent: React.FC = () => {
       >
         <MessageCircle className="w-6 h-6 fill-current" />
       </a>
-      )}
 
       {/* Guide Button (Desktop) */}
-      {!isIndependentPage && (
       <button
         onClick={() => setActivePage('guide')}
         className="hidden md:flex fixed top-1/2 translate-y-12 right-6 z-50 p-3.5 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-110 transition-all duration-300 items-center justify-center"
@@ -689,10 +678,8 @@ const AppContent: React.FC = () => {
       >
         <BookOpen className="w-6 h-6" />
       </button>
-      )}
 
       {/* Scroll to Top Button */}
-      {!isIndependentPage && (
       <button
         onClick={scrollToTop}
         className={`fixed bottom-24 md:bottom-8 right-4 md:right-8 z-40 p-3 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:-translate-y-1 transition-all duration-300 ${
@@ -702,7 +689,6 @@ const AppContent: React.FC = () => {
       >
         <ArrowUp className="w-6 h-6" />
       </button>
-      )}
     </div>
   );
 };
