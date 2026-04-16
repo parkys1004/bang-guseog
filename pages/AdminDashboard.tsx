@@ -117,7 +117,10 @@ export const AdminDashboard: React.FC = () => {
       if (activeTab === 'users') {
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
         unsubscribeUsers = onSnapshot(q, (querySnapshot) => {
-          const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+          const usersData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { ...data, id: doc.id } as any;
+          });
           setUsers(usersData);
           setLoading(false);
         }, (err) => {
@@ -129,7 +132,10 @@ export const AdminDashboard: React.FC = () => {
         setLoadingMaterials(true);
         const q = query(collection(db, 'materials'), orderBy('createdAt', 'desc'));
         unsubscribeMaterials = onSnapshot(q, (querySnapshot) => {
-          const materialsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+          const materialsData = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return { ...data, id: doc.id } as any;
+          });
           materialsData.sort((a, b) => {
             const orderA = typeof a.order === 'number' ? a.order : 999999;
             const orderB = typeof b.order === 'number' ? b.order : 999999;
@@ -175,9 +181,10 @@ export const AdminDashboard: React.FC = () => {
     showConfirm('정말로 이 자료를 삭제하시겠습니까?', async () => {
       try {
         await deleteDoc(doc(db, 'materials', materialId));
+        showAlert('자료가 성공적으로 삭제되었습니다.');
       } catch (err) {
         handleFirestoreError(err, 'delete', `materials/${materialId}`);
-        showAlert('자료 삭제에 실패했습니다.');
+        showAlert(`자료 삭제에 실패했습니다: ${err instanceof Error ? err.message : String(err)}`);
       }
     });
   };
@@ -201,7 +208,7 @@ export const AdminDashboard: React.FC = () => {
         }
       } catch (err) {
         handleFirestoreError(err, 'delete', `users/${userId}`);
-        showAlert('회원 강퇴에 실패했습니다.');
+        showAlert(`회원 강퇴에 실패했습니다: ${err instanceof Error ? err.message : String(err)}`);
       }
     });
   };
