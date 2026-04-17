@@ -46,7 +46,7 @@ const AppContent: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
-  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(true); // 새로고침 시 기본적으로 띄우기
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false); // 팝업창 안 뜨게 설정
   const [accessModalType, setAccessModalType] = useState<'expired' | 'tier-low' | 'login-required'>('login-required');
   const [requiredTier, setRequiredTier] = useState<string>('');
   const [showScrollTop, setShowScrollTop] = useState(false);
