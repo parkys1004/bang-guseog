@@ -156,7 +156,8 @@ service cloud.firestore {
     }
     // Config rules
     match /config/{configId} {
-      allow read, write: if isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     // Deleted users rules

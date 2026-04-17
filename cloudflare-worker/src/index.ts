@@ -1,6 +1,7 @@
 export interface Env {
   // 환경 변수 (Cloudflare 대시보드에서 설정하거나 wrangler secret으로 등록)
   FIREBASE_PROJECT_ID: string;
+  FIREBASE_DATABASE_ID?: string; // 추가: 특정 데이터베이스 ID (없으면 (default) 사용)
   FIREBASE_WEB_API_KEY: string;
   ADMIN_EMAIL: string;
   ADMIN_PASSWORD: string;
@@ -60,7 +61,8 @@ export default {
         const idToken = authData.idToken;
 
         // 2. Firestore에서 현재 마스터 비밀번호 읽어오기
-        const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/config/globalConfig`;
+        const databaseId = env.FIREBASE_DATABASE_ID || '(default)';
+        const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
           method: 'GET',
           headers: {
@@ -139,7 +141,8 @@ async function rotatePasswordAndNotify(env: Env) {
     const idToken = authData.idToken;
 
     // 3. Firestore 업데이트 (config/globalConfig)
-    const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
+    const databaseId = env.FIREBASE_DATABASE_ID || '(default)';
+    const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
     const updateRes = await fetch(updateUrl, {
       method: 'PATCH',
       headers: { 
@@ -160,7 +163,7 @@ async function rotatePasswordAndNotify(env: Env) {
     }
 
     // 4. Firestore에서 유저 목록 조회
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users`;
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/users`;
     const usersRes = await fetch(firestoreUrl, {
       headers: {
         'Authorization': `Bearer ${idToken}`
