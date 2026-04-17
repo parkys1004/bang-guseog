@@ -611,7 +611,7 @@ export const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24 animate-in fade-in duration-500">
+    <div className="max-w-[1700px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl">
