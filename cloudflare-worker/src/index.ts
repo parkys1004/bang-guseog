@@ -51,8 +51,9 @@ export default {
         });
 
         if (!authResponse.ok) {
-          return new Response(JSON.stringify({ valid: false, message: '내부 인증 오류' }), { 
-            status: 500, 
+          const authErr = await authResponse.text();
+          return new Response(JSON.stringify({ valid: false, message: `인증 오류: ${authErr.substring(0, 50)}` }), { 
+            status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }
@@ -61,7 +62,9 @@ export default {
         const idToken = authData.idToken;
 
         // 2. Firestore에서 현재 마스터 비밀번호 읽어오기
-        const databaseId = env.FIREBASE_DATABASE_ID || '(default)';
+        const rawDbId = env.FIREBASE_DATABASE_ID || '(default)';
+        const databaseId = rawDbId.replace(/['"]/g, '').trim() || '(default)';
+        
         const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
           method: 'GET',
@@ -71,8 +74,12 @@ export default {
         });
 
         if (!docResponse.ok) {
-          return new Response(JSON.stringify({ valid: false, message: '설정 정보를 불러오지 못했습니다.' }), { 
-            status: 500, 
+          const errText = await docResponse.text();
+          return new Response(JSON.stringify({ 
+            valid: false, 
+            message: `설정 정보를 불러오지 못했습니다. DB ID: ${databaseId}. Error: ${errText.substring(0, 50)}` 
+          }), { 
+            status: 200, // 상태 코드를 200으로 해서 Vercel 측에서 에러로 터지지 않게 방지
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }
@@ -141,7 +148,8 @@ async function rotatePasswordAndNotify(env: Env) {
     const idToken = authData.idToken;
 
     // 3. Firestore 업데이트 (config/globalConfig)
-    const databaseId = env.FIREBASE_DATABASE_ID || '(default)';
+    const rawDbId = env.FIREBASE_DATABASE_ID || '(default)';
+    const databaseId = rawDbId.replace(/['"]/g, '').trim() || '(default)';
     const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
     const updateRes = await fetch(updateUrl, {
       method: 'PATCH',
