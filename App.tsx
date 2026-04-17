@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AccessModal } from './components/AccessModal';
+import { NoticeModal } from './components/NoticeModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdvancedMaterialsPage } from './pages/AdvancedMaterialsPage';
@@ -45,6 +46,7 @@ const AppContent: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(true); // 새로고침 시 기본적으로 띄우기
   const [accessModalType, setAccessModalType] = useState<'expired' | 'tier-low' | 'login-required'>('login-required');
   const [requiredTier, setRequiredTier] = useState<string>('');
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -592,6 +594,11 @@ const AppContent: React.FC = () => {
       <SettingsModal 
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+      />
+
+      <NoticeModal
+        isOpen={isNoticeModalOpen}
+        onClose={() => setIsNoticeModalOpen(false)}
       />
 
       <AccessModal 
