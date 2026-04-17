@@ -70,7 +70,7 @@ export const AccessModal: React.FC<AccessModalProps> = ({ isOpen, onClose, type,
               </button>
               
               <a
-                href="https://open.kakao.com/o/sA1vVTbi"
+                href="https://open.kakao.com/o/paYcDloi"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-4 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700"
