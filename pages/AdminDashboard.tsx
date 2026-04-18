@@ -635,7 +635,7 @@ export const AdminDashboard: React.FC = () => {
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[320px] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform origin-top-right">
                 <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
                   <h3 className="font-bold text-sm text-gray-900 dark:text-white">알림</h3>
                   <button 
@@ -663,33 +663,49 @@ export const AdminDashboard: React.FC = () => {
                     notifications.map(notif => (
                       <div 
                         key={notif.id} 
-                        className={`p-3 border-b border-gray-100 dark:border-gray-700/50 last:border-0 ${!notif.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                        className={`p-3 border-b border-gray-100 dark:border-gray-700/50 last:border-0 relative group ${!notif.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
                       >
-                        <div className="flex justify-between items-start mb-1">
+                        <div className="flex justify-between items-start mb-1 pr-6">
                           <h4 className={`text-sm font-bold ${!notif.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
                             {notif.title}
                           </h4>
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2">
                             {new Date(notif.createdAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 pr-6">
                           {notif.content}
                         </p>
-                        {!notif.isRead && (
-                          <button 
+                        <div className="flex items-center gap-3 mt-2">
+                          {!notif.isRead && (
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await updateDoc(doc(db, 'messages', notif.id), { isRead: true });
+                                } catch (e) {
+                                  console.error("Failed to mark as read", e);
+                                }
+                              }}
+                              className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              읽음 표시
+                            </button>
+                          )}
+                          <button
                             onClick={async () => {
                               try {
-                                await updateDoc(doc(db, 'messages', notif.id), { isRead: true });
+                                await deleteDoc(doc(db, 'messages', notif.id));
                               } catch (e) {
-                                console.error("Failed to mark as read", e);
+                                console.error("Failed to delete notification", e);
                               }
                             }}
-                            className="text-[10px] text-blue-600 dark:text-blue-400 mt-2 hover:underline"
+                            className="text-[10px] text-red-500 dark:text-red-400 hover:underline opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity absolute right-3 top-3 sm:static sm:right-auto sm:top-auto"
+                            title="삭제"
                           >
-                            읽음 표시
+                            <Trash2 className="w-3 h-3 sm:hidden" />
+                            <span className="hidden sm:inline">삭제</span>
                           </button>
-                        )}
+                        </div>
                       </div>
                     ))
                   )}
