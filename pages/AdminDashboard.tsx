@@ -620,7 +620,7 @@ export const AdminDashboard: React.FC = () => {
           <h1 className="text-3xl font-black tracking-tight">관리자 대시보드</h1>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto mt-4 md:mt-0">
           <div className="relative">
             <button
               onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -698,58 +698,60 @@ export const AdminDashboard: React.FC = () => {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-800/50 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex gap-1 mr-4">
+          <div className="bg-white dark:bg-gray-800/50 p-1 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-wrap gap-1 md:mr-4 w-full sm:w-auto overflow-x-auto">
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'users' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
             >
               회원 관리
             </button>
             <button
               onClick={() => setActiveTab('materials')}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'materials' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'materials' ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
             >
               자료 관리
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'settings' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+              className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${activeTab === 'settings' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
             >
               환경 설정
             </button>
           </div>
 
           {activeTab === 'materials' && (
-            <>
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
               <button
                 onClick={handleMigrateData}
                 disabled={isMigrating}
-                className="flex items-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all animate-in slide-in-from-right-4 disabled:opacity-50"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all animate-in slide-in-from-right-4 disabled:opacity-50 whitespace-nowrap text-xs sm:text-sm"
               >
                 {isMigrating ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Download className="w-4 h-4" />}
                 기존 자료 가져오기
               </button>
               <button
                 onClick={() => { resetMaterialForm(); setIsUploadModalOpen(true); }}
-                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all animate-in slide-in-from-right-4"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/20 transition-all animate-in slide-in-from-right-4 whitespace-nowrap text-xs sm:text-sm"
               >
                 <Upload className="w-4 h-4" />
                 새 자료 업로드
               </button>
-            </>
+            </div>
           )}
           
           {activeTab === 'users' && selectedUserIds.size > 0 && (
-            <button
-              onClick={() => {
-                setIsBulkMode(true);
-                setIsMessageModalOpen(true);
-              }}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all animate-in slide-in-from-right-4"
-            >
-              <Send className="w-4 h-4" />
-              선택 회원 일괄 쪽지 발송 ({selectedUserIds.size}명)
-            </button>
+            <div className="w-full md:w-auto mt-2 md:mt-0">
+              <button
+                onClick={() => {
+                  setIsBulkMode(true);
+                  setIsMessageModalOpen(true);
+                }}
+                className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all animate-in slide-in-from-right-4 text-xs sm:text-sm"
+              >
+                <Send className="w-4 h-4" />
+                일괄 발송 ({selectedUserIds.size}명)
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -1334,8 +1336,8 @@ export const AdminDashboard: React.FC = () => {
       {/* Material Upload Modal */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
               <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Upload className="w-5 h-5 text-indigo-500" />
                 새 자료 업로드
@@ -1348,7 +1350,7 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleUploadMaterial} className="p-6 space-y-4">
+            <form onSubmit={handleUploadMaterial} className="p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 md:col-span-1">
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
@@ -1497,8 +1499,8 @@ export const AdminDashboard: React.FC = () => {
       {/* Material Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
               <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Edit2 className="w-5 h-5 text-indigo-500" />
                 자료 수정
@@ -1511,7 +1513,7 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleUpdateMaterial} className="p-6 space-y-4">
+            <form onSubmit={handleUpdateMaterial} className="p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 md:col-span-1">
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">자료 제목</label>
@@ -1660,8 +1662,8 @@ export const AdminDashboard: React.FC = () => {
       {/* Message Modal */}
       {isMessageModalOpen && (isBulkMode || selectedUser) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-gray-800 shrink-0">
               <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Send className="w-5 h-5 text-blue-500" />
                 {isBulkMode ? `일괄 쪽지 발송 (${selectedUserIds.size}명)` : '쪽지 발송'}
@@ -1677,7 +1679,7 @@ export const AdminDashboard: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSendMessage} className="p-6 space-y-4">
+            <form onSubmit={handleSendMessage} className="p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">수신자</label>
                 <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium max-h-24 overflow-y-auto">
