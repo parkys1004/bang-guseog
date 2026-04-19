@@ -1511,15 +1511,19 @@ export const AdminDashboard: React.FC = () => {
                     />
                   )}
 
-                  <div 
-                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden ${
+                  <label 
+                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden cursor-pointer ${
                       isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 w-full'
                     }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                   >
-                    <div className="space-y-1 text-center w-full z-10 relative">
+                    <input type="file" className="sr-only" accept="image/*" onChange={(e) => {
+                      handleFileChange(e);
+                      e.target.value = '';
+                    }} />
+                    <div className="space-y-1 text-center w-full z-10 relative pointer-events-none">
                       {imageUploadProgress !== null ? (
                         <div className="flex flex-col items-center justify-center py-4">
                           <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
@@ -1529,26 +1533,24 @@ export const AdminDashboard: React.FC = () => {
                         <div className="flex flex-col items-center">
                           <img src={materialImageUrl} alt="Thumbnail preview" className="max-h-32 object-contain rounded-lg mb-3 shadow" />
                           <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center w-full">
-                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none">
-                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">다른 이미지로 변경</span>
-                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
-                            </label>
+                            <span className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 pointer-events-auto cursor-pointer">
+                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">클릭하여 다른 이미지로 변경</span>
+                            </span>
                           </div>
                         </div>
                       ) : (
                         <div className="py-2">
                           <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                           <div className="flex justify-center text-sm text-gray-600 dark:text-gray-400">
-                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none flex gap-1">
-                              <span>이미지 선택</span>
-                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
-                            </label>
-                            <span className="pl-1 hidden sm:inline-block">또는 파일 드롭</span>
+                            <span className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex gap-1 pointer-events-auto cursor-pointer">
+                              <span>이미지 영역 클릭하여 파일 선택</span>
+                            </span>
                           </div>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">또는 여기에 파일을 드롭하세요</p>
                         </div>
                       )}
                     </div>
-                  </div>
+                  </label>
                 </div>
               )}
 
@@ -1723,15 +1725,19 @@ export const AdminDashboard: React.FC = () => {
                     />
                   )}
 
-                  <div 
-                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden ${
+                  <label 
+                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden cursor-pointer ${
                       isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 w-full'
                     }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                   >
-                    <div className="space-y-1 text-center w-full z-10 relative">
+                    <input type="file" className="sr-only" accept="image/*" onChange={(e) => {
+                      handleFileChange(e);
+                      e.target.value = '';
+                    }} />
+                    <div className="space-y-1 text-center w-full z-10 relative pointer-events-none">
                       {imageUploadProgress !== null ? (
                         <div className="flex flex-col items-center justify-center py-4">
                           <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
@@ -1741,26 +1747,24 @@ export const AdminDashboard: React.FC = () => {
                         <div className="flex flex-col items-center">
                           <img src={materialImageUrl} alt="Thumbnail preview" className="max-h-32 object-contain rounded-lg mb-3 shadow" />
                           <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center w-full">
-                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none">
-                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">다른 이미지로 변경</span>
-                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
-                            </label>
+                            <span className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 pointer-events-auto cursor-pointer">
+                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">클릭하여 다른 이미지로 변경</span>
+                            </span>
                           </div>
                         </div>
                       ) : (
                         <div className="py-2">
                           <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
                           <div className="flex justify-center text-sm text-gray-600 dark:text-gray-400">
-                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none flex gap-1">
-                              <span>이미지 선택</span>
-                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
-                            </label>
-                            <span className="pl-1 hidden sm:inline-block">또는 파일 드롭</span>
+                            <span className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex gap-1 pointer-events-auto cursor-pointer">
+                              <span>이미지 영역 클릭하여 파일 선택</span>
+                            </span>
                           </div>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">또는 여기에 파일을 드롭하세요</p>
                         </div>
                       )}
                     </div>
-                  </div>
+                  </label>
                 </div>
               )}
 
