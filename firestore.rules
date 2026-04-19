@@ -96,7 +96,7 @@ service cloud.firestore {
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.description is string && data.description.size() < 2000 &&
              data.contentUrl is string && data.contentUrl.size() < 1000 &&
-             data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder'] &&
+             data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder', 'thumbnail'] &&
              (!('subCategory' in data) || data.subCategory == null || (data.subCategory is string && data.subCategory.size() < 100)) &&
              data.requiredTier in ['free', 'silver', 'gold'] &&
              (!('imageUrl' in data) || data.imageUrl == null || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
