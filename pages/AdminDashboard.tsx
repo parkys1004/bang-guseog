@@ -1208,6 +1208,7 @@ export const AdminDashboard: React.FC = () => {
                   <option value="advanced">고급 자료실</option>
                   <option value="ebook">전자책</option>
                   <option value="prompt">프롬프트</option>
+                  <option value="thumbnail">썸네일 갤러리</option>
                   <option value="service">그외 자료</option>
                 </select>
               </div>
