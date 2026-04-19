@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, getDocs, query, orderBy, doc, updateDoc, addDoc, onSnapshot, deleteDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key, UserX, Bell } from 'lucide-react';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
+import { Users, Activity, Database, ShieldCheck, Mail, Calendar, Edit2, Check, X, Search, Send, Upload, FileText, Trash2, Download, Key, UserX, Bell, Image as ImageIcon } from 'lucide-react';
 import { AI_CONTENTS, EBOOK_CONTENTS } from '../data';
 import { servicesData } from './ServicePage';
 import { PROMPTS } from './PromptPage';
@@ -44,7 +45,7 @@ export const AdminDashboard: React.FC = () => {
   const [materialUrl, setMaterialUrl] = useState('');
   const [materialImageUrl, setMaterialImageUrl] = useState('');
   const [materialPrompt, setMaterialPrompt] = useState('');
-  const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder'>('advanced');
+  const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder' | 'thumbnail'>('advanced');
   const [materialSubCategory, setMaterialSubCategory] = useState('');
   const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('gold');
   const [materialOrder, setMaterialOrder] = useState<number | ''>('');
@@ -57,6 +58,67 @@ export const AdminDashboard: React.FC = () => {
   // Material Filter state
   const [searchMaterialQuery, setSearchMaterialQuery] = useState('');
   const [filterMaterialCategory, setFilterMaterialCategory] = useState<string>('all');
+
+  // Image Upload state
+  const [isDragging, setIsDragging] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState<number | null>(null);
+
+  const handleImageUpload = (file: File) => {
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("이미지 크기는 10MB 이하여야 합니다.");
+      return;
+    }
+
+    const storageRef = ref(storage, `materials/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    setImageUploadProgress(0);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setImageUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Image upload failed:", error);
+        alert('이미지 업로드에 실패했습니다.');
+        setImageUploadProgress(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setMaterialImageUrl(downloadURL);
+          setImageUploadProgress(null);
+        });
+      }
+    );
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageUpload(e.target.files[0]);
+    }
+  };
 
   // Modal states
   const [alertModal, setAlertModal] = useState<{ isOpen: boolean, message: string }>({ isOpen: false, message: '' });
@@ -454,17 +516,17 @@ export const AdminDashboard: React.FC = () => {
   const handleUploadMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!materialTitle.trim() || !materialDescription.trim()) return;
-    if (materialCategory !== 'prompt' && !materialUrl.trim()) return;
-    if (materialCategory === 'prompt' && !materialPrompt.trim()) return;
+    if (materialCategory !== 'prompt' && materialCategory !== 'thumbnail' && !materialUrl.trim()) return;
+    if ((materialCategory === 'prompt' || materialCategory === 'thumbnail') && !materialPrompt.trim()) return;
 
     setIsUploading(true);
     try {
       await addDoc(collection(db, 'materials'), {
         title: materialTitle,
         description: materialDescription,
-        contentUrl: materialCategory === 'prompt' ? '' : materialUrl,
-        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook') ? materialImageUrl : null,
-        prompt: materialCategory === 'prompt' ? materialPrompt : null,
+        contentUrl: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? '' : materialUrl,
+        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') ? materialImageUrl : null,
+        prompt: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? materialPrompt : null,
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
@@ -501,8 +563,8 @@ export const AdminDashboard: React.FC = () => {
   const handleUpdateMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMaterialId || !materialTitle.trim() || !materialDescription.trim()) return;
-    if (materialCategory !== 'prompt' && !materialUrl.trim()) return;
-    if (materialCategory === 'prompt' && !materialPrompt.trim()) return;
+    if (materialCategory !== 'prompt' && materialCategory !== 'thumbnail' && !materialUrl.trim()) return;
+    if ((materialCategory === 'prompt' || materialCategory === 'thumbnail') && !materialPrompt.trim()) return;
 
     setIsUploading(true);
     try {
@@ -510,9 +572,9 @@ export const AdminDashboard: React.FC = () => {
       await updateDoc(materialRef, {
         title: materialTitle,
         description: materialDescription,
-        contentUrl: materialCategory === 'prompt' ? '' : materialUrl,
-        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook') ? materialImageUrl : null,
-        prompt: materialCategory === 'prompt' ? materialPrompt : null,
+        contentUrl: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? '' : materialUrl,
+        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') ? materialImageUrl : null,
+        prompt: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? materialPrompt : null,
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
@@ -1188,12 +1250,14 @@ export const AdminDashboard: React.FC = () => {
                           m.category === 'ebook' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
                           m.category === 'prompt' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
                           m.category === 'webbuilder' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                          m.category === 'thumbnail' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400' :
                           'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
                         }`}>
                           {m.category === 'advanced' ? '고급 자료' : 
                            m.category === 'ebook' ? '전자책' : 
                            m.category === 'prompt' ? '프롬프트' : 
-                           m.category === 'webbuilder' ? '웹빌더앱' : '그외 자료'}
+                           m.category === 'webbuilder' ? '웹빌더앱' : 
+                           m.category === 'thumbnail' ? '썸네일 갤러리' : '그외 자료'}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium max-w-[200px] truncate" title={m.title}>
@@ -1216,7 +1280,7 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {m.category === 'prompt' ? (
+                          {(m.category === 'prompt' || m.category === 'thumbnail') ? (
                             <button 
                               onClick={() => showAlert(`프롬프트 내용:\n\n${m.prompt || '내용 없음'}`)}
                               className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -1402,7 +1466,7 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              {materialCategory === 'prompt' ? (
+              {(materialCategory === 'prompt' || materialCategory === 'thumbnail') ? (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">프롬프트 내용</label>
                   <textarea
@@ -1427,16 +1491,64 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
 
-              {(materialCategory === 'webbuilder' || materialCategory === 'ebook') && (
+              {(materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') && (
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">썸네일 이미지 URL</label>
-                  <input
-                    type="url"
-                    value={materialImageUrl}
-                    onChange={(e) => setMaterialImageUrl(e.target.value)}
-                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="https://... (이미지 주소)"
-                  />
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                    <span>썸네일 이미지 <span className="text-gray-400 font-normal text-xs">(권장)</span></span>
+                    {materialImageUrl && (
+                      <button type="button" onClick={() => setMaterialImageUrl('')} className="text-red-500 hover:text-red-600 text-xs font-medium px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded">삭제</button>
+                    )}
+                  </label>
+                  
+                  {!isDragging && !imageUploadProgress && !materialImageUrl && (
+                    <input
+                      type="url"
+                      value={materialImageUrl}
+                      onChange={(e) => setMaterialImageUrl(e.target.value)}
+                      className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-2"
+                      placeholder="https://... (또는 아래에 이미지 업로드)"
+                      required={materialCategory === 'thumbnail'}
+                    />
+                  )}
+
+                  <div 
+                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden ${
+                      isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 w-full'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className="space-y-1 text-center w-full z-10 relative">
+                      {imageUploadProgress !== null ? (
+                        <div className="flex flex-col items-center justify-center py-4">
+                          <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+                          <p className="text-sm text-gray-500 font-medium">업로드 중... {Math.round(imageUploadProgress)}%</p>
+                        </div>
+                      ) : materialImageUrl ? (
+                        <div className="flex flex-col items-center">
+                          <img src={materialImageUrl} alt="Thumbnail preview" className="max-h-32 object-contain rounded-lg mb-3 shadow" />
+                          <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center w-full">
+                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none">
+                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">다른 이미지로 변경</span>
+                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-2">
+                          <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <div className="flex justify-center text-sm text-gray-600 dark:text-gray-400">
+                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none flex gap-1">
+                              <span>이미지 선택</span>
+                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                            <span className="pl-1 hidden sm:inline-block">또는 파일 드롭</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1452,6 +1564,7 @@ export const AdminDashboard: React.FC = () => {
                     <option value="advanced">고급 자료실</option>
                     <option value="ebook">전자책</option>
                     <option value="prompt">프롬프트</option>
+                    <option value="thumbnail">썸네일 갤러리</option>
                     <option value="service">그외 자료</option>
                   </select>
                 </div>
@@ -1565,7 +1678,7 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              {materialCategory === 'prompt' ? (
+              {(materialCategory === 'prompt' || materialCategory === 'thumbnail') ? (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">프롬프트 내용</label>
                   <textarea
@@ -1590,16 +1703,64 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
 
-              {(materialCategory === 'webbuilder' || materialCategory === 'ebook') && (
+              {(materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') && (
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">썸네일 이미지 URL</label>
-                  <input
-                    type="url"
-                    value={materialImageUrl}
-                    onChange={(e) => setMaterialImageUrl(e.target.value)}
-                    className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                    placeholder="https://... (이미지 주소)"
-                  />
+                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                    <span>썸네일 이미지 <span className="text-gray-400 font-normal text-xs">(권장)</span></span>
+                    {materialImageUrl && (
+                      <button type="button" onClick={() => setMaterialImageUrl('')} className="text-red-500 hover:text-red-600 text-xs font-medium px-2 py-0.5 bg-red-50 dark:bg-red-900/20 rounded">삭제</button>
+                    )}
+                  </label>
+                  
+                  {!isDragging && !imageUploadProgress && !materialImageUrl && (
+                    <input
+                      type="url"
+                      value={materialImageUrl}
+                      onChange={(e) => setMaterialImageUrl(e.target.value)}
+                      className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-2"
+                      placeholder="https://... (또는 아래에 이미지 업로드)"
+                      required={materialCategory === 'thumbnail'}
+                    />
+                  )}
+
+                  <div 
+                    className={`mt-1 flex justify-center px-4 py-4 border-2 border-dashed rounded-xl transition-all relative overflow-hidden ${
+                      isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 w-full'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <div className="space-y-1 text-center w-full z-10 relative">
+                      {imageUploadProgress !== null ? (
+                        <div className="flex flex-col items-center justify-center py-4">
+                          <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3" />
+                          <p className="text-sm text-gray-500 font-medium">업로드 중... {Math.round(imageUploadProgress)}%</p>
+                        </div>
+                      ) : materialImageUrl ? (
+                        <div className="flex flex-col items-center">
+                          <img src={materialImageUrl} alt="Thumbnail preview" className="max-h-32 object-contain rounded-lg mb-3 shadow" />
+                          <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center w-full">
+                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none">
+                              <span className="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm inline-block w-full">다른 이미지로 변경</span>
+                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-2">
+                          <ImageIcon className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <div className="flex justify-center text-sm text-gray-600 dark:text-gray-400">
+                            <label className="relative cursor-pointer rounded-md font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 focus-within:outline-none flex gap-1">
+                              <span>이미지 선택</span>
+                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+                            </label>
+                            <span className="pl-1 hidden sm:inline-block">또는 파일 드롭</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1615,6 +1776,7 @@ export const AdminDashboard: React.FC = () => {
                     <option value="advanced">고급 자료실</option>
                     <option value="ebook">전자책</option>
                     <option value="prompt">프롬프트</option>
+                    <option value="thumbnail">썸네일 갤러리</option>
                     <option value="service">그외 자료</option>
                   </select>
                 </div>

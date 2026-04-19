@@ -19,6 +19,7 @@ import { NoticeModal } from './components/NoticeModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdvancedMaterialsPage } from './pages/AdvancedMaterialsPage';
+import { ThumbnailGalleryPage } from './pages/ThumbnailGalleryPage';
 import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,7 +38,7 @@ const testConnection = async () => {
 
 testConnection();
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials' | 'privacy' | 'terms';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'thumbnail-gallery' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials' | 'privacy' | 'terms';
 
 const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
@@ -244,6 +245,7 @@ const AppContent: React.FC = () => {
       );
       case 'ebook': return <EbookPage onOpenAuth={handleOpenAuth} onOpenAccessDenied={handleOpenAccessDenied} />;
       case 'prompt': return <PromptPage onOpenAuth={handleOpenAuth} onOpenAccessDenied={handleOpenAccessDenied} />;
+      case 'thumbnail-gallery': return <ThumbnailGalleryPage />;
       case 'service': return <ServicePage />;
       case 'about': return <AboutPage />;
       case 'contact': return <ContactPage />;
@@ -269,6 +271,7 @@ const AppContent: React.FC = () => {
     { id: 'showcase', label: '웹빌더앱' },
     { id: 'ebook', label: '전자책' },
     { id: 'prompt', label: '프롬프트' },
+    { id: 'thumbnail-gallery', label: '썸네일 갤러리' },
     { id: 'service', label: '그외 자료' },
     { id: 'recommended', label: '추천사이트' },
     { id: 'faq', label: 'FAQ' },
