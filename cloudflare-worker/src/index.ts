@@ -38,51 +38,27 @@ export default {
           });
         }
 
-        // 0. Fallback Values
+        // 0. Fallback Values (환경 변수가 없을 경우 대비)
         const projectId = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
-
-        // 1. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
-        const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_WEB_API_KEY}`;
-        const authResponse = await fetch(authUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: env.ADMIN_EMAIL,
-            password: env.ADMIN_PASSWORD,
-            returnSecureToken: true
-          })
-        });
-
-        if (!authResponse.ok) {
-          const authErr = await authResponse.text();
-          return new Response(JSON.stringify({ 
-            valid: false, 
-            message: `인증 오류: ${authErr.substring(0, 50)} (Email: ${env.ADMIN_EMAIL})` 
-          }), { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          });
-        }
-
-        const authData: any = await authResponse.json();
-        const idToken = authData.idToken;
-
-        // 2. Firestore에서 현재 마스터 비밀번호 읽어오기 (보안규칙에서 공개 읽기 허용됨)
         const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
-        
+
+        // 1. Firestore에서 현재 마스터 비밀번호 읽어오기 (보안규칙에서 공개 읽기 허용됨)
         const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
-          method: 'GET'
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!docResponse.ok) {
           const errText = await docResponse.text();
           return new Response(JSON.stringify({ 
             valid: false, 
-            message: `비밀번호를 가져오지 못했습니다. Project: ${projectId}, DB: ${databaseId}. Error: ${errText.substring(0, 100)}` 
+            message: `데이터베이스 연결 오류. Project: ${projectId}, DB: ${databaseId}. Error: ${errText.substring(0, 100)}` 
           }), { 
-            status: 200,
+            status: 200, // 클라이언트 측에서 "연결 실패"로 뜨는 것을 방지하기 위해 200 반환
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }
@@ -93,14 +69,14 @@ export default {
         if (!currentPassword) {
           return new Response(JSON.stringify({ 
             valid: false, 
-            message: '데이터베이스에 마스터 비밀번호가 설정되어 있지 않습니다.' 
+            message: '데이터베이스에 마스터 비밀번호가 설정되어 있지 않습니다. 관리자 대시보드에서 먼저 설정해주세요.' 
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }
 
-        // 3. 입력된 비밀번호와 Firestore의 비밀번호 비교
+        // 2. 비밀번호 비교
         if (inputPassword === currentPassword) {
           return new Response(JSON.stringify({ valid: true }), {
             status: 200,
@@ -114,8 +90,11 @@ export default {
         }
 
       } catch (error) {
-        return new Response(JSON.stringify({ valid: false, message: '서버 오류가 발생했습니다.' }), {
-          status: 500,
+        return new Response(JSON.stringify({ 
+          valid: false, 
+          message: `서버 내부 오류: ${error instanceof Error ? error.message : String(error)}` 
+        }), {
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
