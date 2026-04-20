@@ -15,9 +15,9 @@ service cloud.firestore {
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     
     function isAdmin() {
-      return isEmailVerified() && (
+      return isSignedIn() && (
         request.auth.token.email == "aimaster1004@gmail.com" || 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        (isEmailVerified() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
@@ -73,7 +73,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow create: if isEmailVerified() && isOwner(userId) && isValidUser(incoming());
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming());
       allow update: if isSignedIn() && (
         isAdmin() || 
         (isOwner(userId) && 
@@ -116,7 +116,7 @@ service cloud.firestore {
 
     match /deleted_users/{email} {
       allow read: if isAdmin();
-      allow create: if isEmailVerified() && (isAdmin() || request.auth.token.email.lower() == email);
+      allow create: if isSignedIn() && (isAdmin() || request.auth.token.email.lower() == email);
       allow update, delete: if isAdmin();
     }
   }

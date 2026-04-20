@@ -38,6 +38,9 @@ export default {
           });
         }
 
+        // 0. Fallback Values
+        const projectId = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
+
         // 1. Admin 계정으로 로그인하여 ID Token 획득 (Firestore 접근용)
         const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${env.FIREBASE_WEB_API_KEY}`;
         const authResponse = await fetch(authUrl, {
@@ -52,7 +55,10 @@ export default {
 
         if (!authResponse.ok) {
           const authErr = await authResponse.text();
-          return new Response(JSON.stringify({ valid: false, message: `인증 오류: ${authErr.substring(0, 50)}` }), { 
+          return new Response(JSON.stringify({ 
+            valid: false, 
+            message: `인증 오류: ${authErr.substring(0, 50)} (Email: ${env.ADMIN_EMAIL})` 
+          }), { 
             status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
@@ -65,7 +71,7 @@ export default {
         const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         
-        const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig`;
+        const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
           method: 'GET',
           headers: {
@@ -77,15 +83,25 @@ export default {
           const errText = await docResponse.text();
           return new Response(JSON.stringify({ 
             valid: false, 
-            message: `설정 정보를 불러오지 못했습니다. DB ID: ${databaseId}. Error: ${errText.substring(0, 50)}` 
+            message: `설정 정보를 불러오지 못했습니다. DB: ${databaseId}, Project: ${projectId}. Error: ${errText.substring(0, 100)}` 
           }), { 
-            status: 200, // 상태 코드를 200으로 해서 Vercel 측에서 에러로 터지지 않게 방지
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }
 
         const docData: any = await docResponse.json();
         const currentPassword = docData.fields?.currentPassword?.stringValue;
+
+        if (!currentPassword) {
+          return new Response(JSON.stringify({ 
+            valid: false, 
+            message: '데이터베이스에 마스터 비밀번호가 설정되어 있지 않습니다.' 
+          }), { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
 
         // 3. 입력된 비밀번호와 Firestore의 비밀번호 비교
         if (inputPassword === currentPassword) {
@@ -94,7 +110,7 @@ export default {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } else {
-          return new Response(JSON.stringify({ valid: false }), {
+          return new Response(JSON.stringify({ valid: false, message: '비밀번호가 일치하지 않습니다.' }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
@@ -148,9 +164,10 @@ async function rotatePasswordAndNotify(env: Env) {
     const idToken = authData.idToken;
 
     // 3. Firestore 업데이트 (config/globalConfig)
+    const projectId = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
     const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
     const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
-    const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
+    const updateUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
     const updateRes = await fetch(updateUrl, {
       method: 'PATCH',
       headers: { 
@@ -171,7 +188,7 @@ async function rotatePasswordAndNotify(env: Env) {
     }
 
     // 4. Firestore에서 유저 목록 조회
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/users`;
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/users`;
     const usersRes = await fetch(firestoreUrl, {
       headers: {
         'Authorization': `Bearer ${idToken}`
