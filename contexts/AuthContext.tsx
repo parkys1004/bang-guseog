@@ -218,6 +218,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check ban status AFTER sign in so we have permission to read deleted_users
       const normalizedEmail = email.toLowerCase();
       const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
       if (deletedUserDoc.exists()) {
@@ -227,12 +230,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
           const remainingMillis = sevenDaysInMillis - (now.getTime() - deletedAt.getTime());
           const remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+          await signOut(auth);
           throw new Error(`탈퇴 또는 강퇴된 계정입니다. ${remainingDays}일 후에 로그인이 가능합니다.`);
         }
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      
       if (!userCredential.user.emailVerified && userCredential.user.providerData[0]?.providerId === 'password') {
         await signOut(auth);
         throw new Error('auth/not-verified');
@@ -281,6 +283,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (email: string, password: string, name: string) => {
     try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Check ban status AFTER sign up
       const normalizedEmail = email.toLowerCase();
       const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
       if (deletedUserDoc.exists()) {
@@ -290,11 +295,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
           const remainingMillis = sevenDaysInMillis - (now.getTime() - deletedAt.getTime());
           const remainingDays = Math.ceil(remainingMillis / (1000 * 60 * 60 * 24));
+          await userCredential.user.delete().catch(() => signOut(auth));
           throw new Error(`탈퇴 또는 강퇴된 계정입니다. ${remainingDays}일 후에 재가입이 가능합니다.`);
         }
       }
 
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(userCredential.user, {
         displayName: name
       });
@@ -378,6 +383,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithPopup(auth, provider);
       
       if (result.user.email) {
+        // Check ban status AFTER sign in
         const normalizedEmail = result.user.email.toLowerCase();
         const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
         if (deletedUserDoc.exists()) {
