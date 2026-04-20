@@ -62,8 +62,8 @@ export default {
         const idToken = authData.idToken;
 
         // 2. Firestore에서 현재 마스터 비밀번호 읽어오기
-        const rawDbId = env.FIREBASE_DATABASE_ID || '(default)';
-        const databaseId = rawDbId.replace(/['"]/g, '').trim() || '(default)';
+        const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
+        const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         
         const docUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
@@ -148,8 +148,8 @@ async function rotatePasswordAndNotify(env: Env) {
     const idToken = authData.idToken;
 
     // 3. Firestore 업데이트 (config/globalConfig)
-    const rawDbId = env.FIREBASE_DATABASE_ID || '(default)';
-    const databaseId = rawDbId.replace(/['"]/g, '').trim() || '(default)';
+    const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
+    const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
     const updateUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/${databaseId}/documents/config/globalConfig?updateMask.fieldPaths=currentPassword&updateMask.fieldPaths=lastUpdated&updateMask.fieldPaths=lastUpdatedBy`;
     const updateRes = await fetch(updateUrl, {
       method: 'PATCH',
