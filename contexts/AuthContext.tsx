@@ -468,6 +468,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      // Invalidate all active access sessions for this user before logging out
+      if (auth.currentUser) {
+        const uid = auth.currentUser.uid;
+        try {
+          const { getDocs, query, collection, where, deleteDoc, doc } = await import('firebase/firestore');
+          const q = query(collection(db, 'access_sessions'), where('userId', '==', uid));
+          const snapshot = await getDocs(q);
+          const deletePromises = snapshot.docs.map(sessionDoc => deleteDoc(doc(db, 'access_sessions', sessionDoc.id)));
+          await Promise.all(deletePromises);
+          console.log(`Cleared ${deletePromises.length} access sessions for user ${uid}`);
+        } catch (sessionErr) {
+          console.error('Error clearing sessions on logout:', sessionErr);
+          // Continue with sign out even if clearing sessions fails
+        }
+      }
       await signOut(auth);
     } catch (error) {
       console.error('Logout error:', error);
