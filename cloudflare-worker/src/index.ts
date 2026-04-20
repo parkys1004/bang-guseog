@@ -26,14 +26,37 @@ export default {
     const url = new URL(request.url);
 
     // /verify 엔드포인트: 빌더앱에서 비밀번호 검증 요청 시 처리
-    if (request.method === 'POST' && url.pathname === '/verify') {
+    if (url.pathname === '/verify') {
+      // GET 요청 핸들링 (연결 테스트용)
+      if (request.method === 'GET') {
+        const projectIdForDebug = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
+        const rawDbIdForDebug = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
+        const databaseIdForDebug = rawDbIdForDebug.replace(/['"]/g, '').trim();
+
+        return new Response(JSON.stringify({ 
+          status: 'online', 
+          message: '방구석 작곡가 워커가 정상 작동 중입니다. 비밀번호 확인은 POST로 요청하세요.',
+          env_check: {
+            projectId: projectIdForDebug,
+            databaseId: databaseIdForDebug
+          }
+        }), { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
+      }
+
+      if (request.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
+      }
+
       try {
         const body = await request.json() as { password?: string };
         const inputPassword = body.password;
 
         if (!inputPassword) {
-          return new Response(JSON.stringify({ valid: false, message: '비밀번호가 필요합니다.' }), {
-            status: 400,
+          return new Response(JSON.stringify({ valid: false, message: '비밀번호를 입력해주세요.' }), {
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
