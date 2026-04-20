@@ -55,6 +55,19 @@
         "reason": { "type": "string", "enum": ["withdrawal", "kicked"] }
       },
       "required": ["email", "deletedAt", "reason"]
+    },
+    "AccessSession": {
+      "title": "AccessSession",
+      "description": "Temporary tokens for automatic login to subsidiary apps",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "tier": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "email", "tier", "createdAt", "expiresAt"]
     }
   },
   "firestore": {
@@ -73,6 +86,10 @@
     "/deleted_users/{email}": {
       "schema": "DeletedUser",
       "description": "Records of deleted users"
+    },
+    "/access_sessions/{sessionId}": {
+      "schema": "AccessSession",
+      "description": "Temporary access tokens"
     }
   }
 }

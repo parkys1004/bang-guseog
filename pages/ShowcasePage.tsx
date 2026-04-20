@@ -5,7 +5,7 @@ import { servicesData } from './ServicePage';
 import { recommendedSites } from './RecommendedSitesPage';
 import { ContentCard } from '../components/ContentCard';
 import { EbookCard } from '../components/EbookCard';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -136,7 +136,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, 
     return matchesSearch && matchesVisibility;
   });
 
-  const handleCardClick = (item: ContentItem | EbookItem) => {
+  const handleCardClick = async (item: ContentItem | EbookItem) => {
     if (item.isPro) {
       if (!user) {
         onOpenAccessDenied('login-required');
@@ -156,7 +156,31 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, 
     }
     
     let targetUrl = item.url;
-    if (user?.email) {
+    
+    // Generate automatic access token if authorized
+    if (user && (user.role === 'admin' || user.tier === 'silver' || user.tier === 'gold')) {
+      try {
+        const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+        await setDoc(doc(db, 'access_sessions', sessionId), {
+          userId: user.id,
+          email: user.email,
+          tier: user.tier,
+          createdAt: new Date().toISOString(),
+          expiresAt: expiresAt.toISOString()
+        });
+
+        const separator = targetUrl.includes('?') ? '&' : '?';
+        targetUrl = `${targetUrl}${separator}u=${encodeURIComponent(user.email)}&s=${sessionId}`;
+      } catch (err) {
+        console.error("Failed to generate access session:", err);
+        // Fallback
+        const separator = targetUrl.includes('?') ? '&' : '?';
+        targetUrl = `${targetUrl}${separator}u=${encodeURIComponent(user.email)}`;
+      }
+    } else if (user?.email) {
       const encodedEmail = encodeURIComponent(user.email);
       const separator = targetUrl.includes('?') ? '&' : '?';
       targetUrl = `${targetUrl}${separator}u=${encodedEmail}`;
