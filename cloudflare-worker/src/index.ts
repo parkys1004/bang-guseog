@@ -67,23 +67,20 @@ export default {
         const authData: any = await authResponse.json();
         const idToken = authData.idToken;
 
-        // 2. Firestore에서 현재 마스터 비밀번호 읽어오기
+        // 2. Firestore에서 현재 마스터 비밀번호 읽어오기 (보안규칙에서 공개 읽기 허용됨)
         const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         
         const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig`;
         const docResponse = await fetch(docUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${idToken}`
-          }
+          method: 'GET'
         });
 
         if (!docResponse.ok) {
           const errText = await docResponse.text();
           return new Response(JSON.stringify({ 
             valid: false, 
-            message: `설정 정보를 불러오지 못했습니다. DB: ${databaseId}, Project: ${projectId}. Error: ${errText.substring(0, 100)}` 
+            message: `비밀번호를 가져오지 못했습니다. Project: ${projectId}, DB: ${databaseId}. Error: ${errText.substring(0, 100)}` 
           }), { 
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
