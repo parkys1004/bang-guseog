@@ -8,12 +8,13 @@ service cloud.firestore {
     }
 
     // ===============================================================
-    // Primitive Helpers
+    // 3. Primitive Helpers
     // ===============================================================
     function isSignedIn() { return request.auth != null; }
     function isEmailVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
     
+    // Auth tokens NEVER contain custom claims. Explicitly look up roles on trusted document.
     function isAdmin() {
       return isEmailVerified() && (
         request.auth.token.email == "aimaster1004@gmail.com" || 
@@ -26,81 +27,109 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
     }
     
+    function isValidEmail(email) {
+      return email is string && email.size() < 100 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     
     // ===============================================================
-    // Validation Blueprints
+    // 2. Validation Blueprints
     // ===============================================================
 
     function isValidUser(data) {
       return data.keys().hasAll(['name', 'email', 'role', 'tier', 'createdAt']) &&
-             data.keys().size() <= 7 && // Strict key count (including optional fields)
+             data.keys().size() == (('photoURL' in data ? 1 : 0) + ('subscriptionEndDate' in data ? 1 : 0) + 5) &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.email is string && data.email == request.auth.token.email &&
              data.role in ['admin', 'user'] &&
              data.tier in ['free', 'silver', 'gold'] &&
              data.createdAt == request.time &&
+             (!('photoURL' in data) || data.photoURL == null || (data.photoURL is string && data.photoURL.size() < 1000)) &&
              (!('subscriptionEndDate' in data) || data.subscriptionEndDate == null || (data.subscriptionEndDate is string && data.subscriptionEndDate.size() < 100));
     }
 
     function isValidMessage(data) {
       return data.keys().hasAll(['senderId', 'receiverId', 'title', 'content', 'isRead', 'createdAt']) &&
-             data.keys().size() <= 7 &&
+             data.keys().size() == (('senderName' in data ? 1 : 0) + 6) &&
              data.senderId == request.auth.uid &&
              data.receiverId is string && isValidId(data.receiverId) &&
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
-             data.isRead == false &&
-             data.createdAt == request.time;
+             data.isRead == false && // Initial state
+             data.createdAt == request.time &&
+             (!('senderName' in data) || (data.senderName is string && data.senderName.size() < 100));
     }
 
     function isValidMaterial(data) {
       return data.keys().hasAll(['title', 'description', 'contentUrl', 'category', 'requiredTier', 'authorId', 'createdAt']) &&
-             data.keys().size() <= 11 &&
+             data.keys().size() <= 11 && // Max fields
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.description is string && data.description.size() < 2000 &&
              data.contentUrl is string && data.contentUrl.size() < 1000 &&
              data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder', 'thumbnail'] &&
              data.requiredTier in ['free', 'silver', 'gold'] &&
              data.authorId == request.auth.uid &&
-             data.createdAt == request.time;
+             data.createdAt == request.time &&
+             (!('subCategory' in data) || (data.subCategory is string && data.subCategory.size() < 100)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('prompt' in data) || (data.prompt is string && data.prompt.size() < 10000)) &&
+             (!('order' in data) || (data.order is number));
     }
 
     // ===============================================================
-    // Match Blocks
+    // 4. Match Blocks (Fortress Construction)
     // ===============================================================
 
+    // User rules
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow create: if isEmailVerified() && isOwner(userId) && isValidUser(incoming());
       allow update: if isSignedIn() && (
+        // Admin can change anything except immutable fields if needed, but usually limited
         isAdmin() || 
         (isOwner(userId) && 
          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'photoURL']) &&
          incoming().email == existing().email &&
          incoming().role == existing().role &&
-         incoming().tier == existing().tier)
+         incoming().tier == existing().tier &&
+         incoming().createdAt == existing().createdAt)
       );
       allow delete: if isAdmin();
     }
 
+    // Message rules
     match /messages/{messageId} {
-      allow read, list: if isSignedIn() && (
+      allow read: if isSignedIn() && (
         resource.data.receiverId == request.auth.uid || 
         resource.data.senderId == request.auth.uid ||
         isAdmin()
       );
-      allow create: if isEmailVerified() && isValidMessage(incoming());
+      allow list: if isSignedIn() && (
+        resource.data.receiverId == request.auth.uid || 
+        resource.data.senderId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isEmailVerified() && (
+        isValidMessage(incoming()) || 
+        isAdmin()
+      );
       allow update: if isSignedIn() && (
         (isOwner(resource.data.receiverId) && incoming().diff(existing()).affectedKeys().hasOnly(['isRead'])) ||
         isAdmin()
       );
-      allow delete: if isSignedIn() && (isOwner(resource.data.receiverId) || isAdmin());
+      allow delete: if isSignedIn() && (
+        isOwner(resource.data.receiverId) ||
+        isAdmin()
+      );
     }
 
+    // Material rules
     match /materials/{materialId} {
-      allow read, list: if true;
+      allow read: if true;
+      allow list: if true;
       allow create: if isAdmin() && isValidMaterial(incoming());
       allow update: if isAdmin() && (
         incoming().authorId == existing().authorId &&
@@ -109,16 +138,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // Config rules
     match /config/{configId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
+    // Deleted users rules
     match /deleted_users/{email} {
-      allow read: if isAdmin();
+      allow read: if true;
       allow create: if isEmailVerified() && (isAdmin() || request.auth.token.email.lower() == email);
       allow update, delete: if isAdmin();
     }
   }
 }
-
