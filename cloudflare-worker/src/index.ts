@@ -12,10 +12,12 @@ export interface Env {
 export default {
   // HTTP 요청을 처리하는 함수 (빌더앱에서 비밀번호 검증 API로 사용)
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const origin = request.headers.get('Origin') || '*';
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Credentials': 'true',
     };
 
     // CORS Preflight 처리
@@ -27,7 +29,7 @@ export default {
 
     // /verify 엔드포인트: 빌더앱에서 비밀번호 검증 요청 시 처리
     if (url.pathname === '/verify') {
-      // GET 요청 핸들링 (연결 테스트용)
+      // GET 요청 핸들링 (연결 테스트용 및 상태 확인)
       if (request.method === 'GET') {
         const projectIdForDebug = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
         const rawDbIdForDebug = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
@@ -35,10 +37,11 @@ export default {
 
         return new Response(JSON.stringify({ 
           status: 'online', 
-          message: '방구석 작곡가 워커가 정상 작동 중입니다. 비밀번호 확인은 POST로 요청하세요.',
-          env_check: {
+          message: '방구석 작곡가 워커가 정상 작동 중입니다.',
+          debug: {
             projectId: projectIdForDebug,
-            databaseId: databaseIdForDebug
+            databaseId: databaseIdForDebug,
+            origin: origin
           }
         }), { 
           status: 200, 
@@ -50,24 +53,44 @@ export default {
         return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
       }
 
+      let inputPassword = '';
       try {
-        const body = await request.json() as { password?: string };
-        const inputPassword = body.password;
-
-        if (!inputPassword) {
-          return new Response(JSON.stringify({ valid: false, message: '비밀번호를 입력해주세요.' }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
+        const contentType = request.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
+          const body = await request.json() as { password?: string };
+          inputPassword = body.password || '';
+        } else {
+          // JSON이 아닌 경우 (예: 폼 데이터 등) 처리 시나리오
+          const text = await request.text();
+          if (text.includes('password=')) {
+             // 단순 파싱 시도 (필요한 경우만)
+             const params = new URLSearchParams(text);
+             inputPassword = params.get('password') || '';
+          }
         }
+      } catch (e) {
+        console.error('Request parsing error:', e);
+        // 파싱 실패해도 에러로 죽지 않고 빈 비번으로 진행 (어차피 틀릴 것)
+      }
 
+      if (!inputPassword) {
+        return new Response(JSON.stringify({ valid: false, message: '비밀번호를 입력해주세요.' }), {
+          status: 200, // 200 반환 유지 (클라이언트 연결 실패 방지용)
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      try {
         // 0. Fallback Values (환경 변수가 없을 경우 대비)
         const projectId = env.FIREBASE_PROJECT_ID || 'gen-lang-client-0979707528';
         const rawDbId = env.FIREBASE_DATABASE_ID || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
         const databaseId = rawDbId.replace(/['"]/g, '').trim() || 'ai-studio-dbbbbaa2-1129-4959-b336-f0af63245a60';
+        const apiKey = env.FIREBASE_WEB_API_KEY || '';
 
         // 1. Firestore에서 현재 마스터 비밀번호 읽어오기 (보안규칙에서 공개 읽기 허용됨)
-        const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig`;
+        // API Key를 쿼리 파라미터에 추가하여 더 안정적인 요청 (공개 읽기라도 API 키가 있으면 좋음)
+        const docUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/config/globalConfig${apiKey ? `?key=${apiKey}` : ''}`;
+        
         const docResponse = await fetch(docUrl, {
           method: 'GET',
           headers: {
@@ -79,9 +102,9 @@ export default {
           const errText = await docResponse.text();
           return new Response(JSON.stringify({ 
             valid: false, 
-            message: `데이터베이스 연결 오류. Project: ${projectId}, DB: ${databaseId}. Error: ${errText.substring(0, 100)}` 
+            message: `DB 연결 오류 (프로젝트: ${projectId}). 잠시 후 다시 시도해 주세요.` 
           }), { 
-            status: 200, // 클라이언트 측에서 "연결 실패"로 뜨는 것을 방지하기 위해 200 반환
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
           });
         }

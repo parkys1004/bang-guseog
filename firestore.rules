@@ -35,41 +35,45 @@ service cloud.firestore {
 
     function isValidUser(data) {
       return data.keys().hasAll(['name', 'email', 'role', 'tier', 'createdAt']) &&
-             data.keys().size() <= 7 && // Strict key count (including optional fields)
+             data.keys().size() <= 7 &&
              data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
              data.email is string && data.email == request.auth.token.email &&
              data.role in ['admin', 'user'] &&
              data.tier in ['free', 'silver', 'gold'] &&
-             data.createdAt == request.time &&
+             data.createdAt is string &&
              (!('subscriptionEndDate' in data) || data.subscriptionEndDate == null || (data.subscriptionEndDate is string && data.subscriptionEndDate.size() < 100));
     }
 
     function isValidMessage(data) {
       return data.keys().hasAll(['senderId', 'receiverId', 'title', 'content', 'isRead', 'createdAt']) &&
-             data.keys().size() <= 7 &&
+             data.keys().size() <= 8 &&
              (data.senderId == request.auth.uid || data.senderId == 'system') &&
              data.receiverId is string && isValidId(data.receiverId) &&
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.content is string && data.content.size() > 0 && data.content.size() < 5000 &&
              data.isRead == false &&
-             data.createdAt == request.time;
+             data.createdAt is string;
     }
 
     function isValidMaterial(data) {
       return data.keys().hasAll(['title', 'description', 'contentUrl', 'category', 'requiredTier', 'authorId', 'createdAt']) &&
-             data.keys().size() <= 11 &&
+             data.keys().size() <= 12 &&
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.description is string && data.description.size() < 2000 &&
              data.contentUrl is string && data.contentUrl.size() < 1000 &&
              data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder', 'thumbnail'] &&
              data.requiredTier in ['free', 'silver', 'gold'] &&
              data.authorId == request.auth.uid &&
-             data.createdAt == request.time;
+             data.createdAt is string;
     }
 
     // ===============================================================
     // Match Blocks
     // ===============================================================
+
+    match /test/connection {
+      allow read: if true;
+    }
 
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
