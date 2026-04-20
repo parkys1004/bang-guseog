@@ -77,6 +77,8 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      // Allow searching for own user record by email (common in auth flows)
+      allow list: if isSignedIn() && (resource.data.email == request.auth.token.email || isAdmin());
       allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming());
       allow update: if isSignedIn() && (
         isAdmin() || 
@@ -90,7 +92,13 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      allow read, list: if isSignedIn() && (
+      allow read: if isSignedIn() && (
+        resource.data.receiverId == request.auth.uid || 
+        resource.data.senderId == request.auth.uid ||
+        isAdmin()
+      );
+      // Explicitly allow list queries for own messages
+      allow list: if isSignedIn() && (
         resource.data.receiverId == request.auth.uid || 
         resource.data.senderId == request.auth.uid ||
         isAdmin()
@@ -113,19 +121,21 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Config rules - Allow public read for master password verification by worker
+    // Config rules - Allow public read for master password verification and app settings
     match /config/globalConfig {
-      allow read: if true;
+      allow read, list: if true;
       allow write: if isAdmin();
     }
 
     match /config/{configId} {
-      allow read: if isSignedIn();
+      allow read, list: if true; // Make config public so apps can load landing page settings
       allow write: if isAdmin();
     }
 
     match /deleted_users/{email} {
+      // Allow users to check their own ban status even during login transition
       allow read: if isSignedIn() && (isAdmin() || request.auth.token.email.lower() == email);
+      allow list: if isAdmin();
       allow create: if isSignedIn() && (isAdmin() || request.auth.token.email.lower() == email);
       allow update, delete: if isAdmin();
     }
