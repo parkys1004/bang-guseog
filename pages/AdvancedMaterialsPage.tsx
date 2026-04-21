@@ -77,7 +77,7 @@ export const AdvancedMaterialsPage: React.FC<Props> = ({ onNavigate }) => {
             홈으로 돌아가기
           </button>
           <p className="text-xs text-gray-500">
-            문의: <a href="https://open.kakao.com/o/paYcDloi" target="_blank" rel="noopener noreferrer" className="underline">카카오톡 1:1 문의</a>
+            문의: <a href="https://open.kakao.com/o/sA1vVTbi" target="_blank" rel="noopener noreferrer" className="underline">카카오톡 1:1 문의</a>
           </p>
         </div>
       </div>

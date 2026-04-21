@@ -640,7 +640,7 @@ const AppContent: React.FC = () => {
       {/* Mobile Bottom Action Bar */}
       <div className="md:hidden fixed bottom-0 left-0 w-full z-50 bg-white dark:bg-[#11141d] border-t border-gray-200 dark:border-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] flex p-2 gap-2 pb-safe">
         <a
-          href="https://open.kakao.com/o/paYcDloi"
+          href="https://open.kakao.com/o/sA1vVTbi"
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex flex-col items-center justify-center py-2 bg-[#FEE500] text-[#371D1E] rounded-xl font-bold text-xs gap-1"
@@ -671,7 +671,7 @@ const AppContent: React.FC = () => {
 
       {/* KakaoTalk Open Chat Button (Desktop) */}
       <a
-        href="https://open.kakao.com/o/paYcDloi"
+        href="https://open.kakao.com/o/sA1vVTbi"
         target="_blank"
         rel="noopener noreferrer"
         className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-6 z-50 p-3.5 rounded-full bg-[#FEE500] text-[#371D1E] shadow-lg hover:bg-[#FDD800] hover:scale-110 transition-all duration-300 items-center justify-center"
