@@ -102,9 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role = firebaseUser.email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
             tier = 'silver'; // Give silver access for 1 day
             
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            subscriptionEndDate = tomorrow.toISOString();
+            const sevenDaysLater = new Date();
+            sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+            subscriptionEndDate = sevenDaysLater.toISOString();
 
             await setDoc(userDocRef, {
               email: firebaseUser.email,
@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
               await addDoc(collection(db, 'messages'), {
                 title: '가입을 환영합니다!',
-                content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 1일로 자동 설정되었습니다.`,
+                content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 7일로 자동 설정되었습니다.`,
                 receiverId: firebaseUser.uid,
                 senderId: 'system',
                 senderName: '시스템 관리자',
@@ -309,9 +309,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Save user to Firestore
       try {
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        const subscriptionEndDate = tomorrow.toISOString();
+        const sevenDaysLater = new Date();
+        sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+        const subscriptionEndDate = sevenDaysLater.toISOString();
 
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           email,
@@ -336,7 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Send welcome message
         await addDoc(collection(db, 'messages'), {
           title: '가입을 환영합니다!',
-          content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 1일로 자동 설정되었습니다.`,
+          content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 7일로 자동 설정되었습니다.`,
           receiverId: userCredential.user.uid,
           senderId: 'system',
           senderName: '시스템 관리자',

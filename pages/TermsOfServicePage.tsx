@@ -58,7 +58,7 @@ export const TermsOfServicePage: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">제 4 조 (회원가입 및 등급)</h2>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>회원가입은 "회원"이 되고자 하는 자가 약관의 내용에 대하여 동의를 한 다음 회원가입신청을 하고 "서비스"가 이러한 신청에 대하여 승낙함으로써 체결됩니다.</li>
-                <li>신규 회원가입 시 자동으로 '실버(Silver)' 등급이 부여되며, 가입 시점으로부터 24시간 동안 실버 등급 전용 자료를 열람할 수 있는 권한이 제공됩니다.</li>
+                <li>신규 회원가입 시 자동으로 '실버(Silver)' 등급이 부여되며, 가입 시점으로부터 7일 동안 실버 등급 전용 자료를 열람할 수 있는 권한이 제공됩니다.</li>
                 <li>기간 만료 후에는 기본 등급인 '무료(Free)' 등급으로 전환되며, 추가 이용을 원할 경우 별도의 절차를 통해 등급을 갱신할 수 있습니다.</li>
               </ul>
             </section>

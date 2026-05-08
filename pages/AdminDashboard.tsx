@@ -697,7 +697,7 @@ export const AdminDashboard: React.FC = () => {
             </button>
 
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[320px] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform origin-top-right">
+              <div className="absolute left-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[320px] bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden transform origin-top-left">
                 <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
                   <h3 className="font-bold text-sm text-gray-900 dark:text-white">알림</h3>
                   <button 
@@ -1938,14 +1938,14 @@ export const AdminDashboard: React.FC = () => {
       )}
       {/* Alert Modal */}
       {alertModal.isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[70] flex items-start justify-end p-4 md:p-6 pointer-events-none animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 pointer-events-auto animate-in slide-in-from-right-10 duration-300">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">알림</h3>
                 <button 
                   onClick={() => setAlertModal({ isOpen: false, message: '' })}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1956,7 +1956,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setAlertModal({ isOpen: false, message: '' })}
-                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors"
                 >
                   확인
                 </button>
@@ -1968,14 +1968,14 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Confirm Modal */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[70] flex items-start justify-end p-4 md:p-6 bg-black/20 backdrop-blur-[2px] animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in slide-in-from-right-10 duration-300">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">확인</h3>
                 <button 
                   onClick={() => setConfirmModal({ isOpen: false, message: '', onConfirm: () => {} })}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1983,10 +1983,10 @@ export const AdminDashboard: React.FC = () => {
               <div className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap mb-6">
                 {confirmModal.message}
               </div>
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmModal({ isOpen: false, message: '', onConfirm: () => {} })}
-                  className="px-6 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex-1 px-6 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   취소
                 </button>
@@ -1995,7 +1995,7 @@ export const AdminDashboard: React.FC = () => {
                     confirmModal.onConfirm();
                     setConfirmModal({ isOpen: false, message: '', onConfirm: () => {} });
                   }}
-                  className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
+                  className="flex-1 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors"
                 >
                   확인
                 </button>

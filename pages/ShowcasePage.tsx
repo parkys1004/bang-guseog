@@ -217,7 +217,7 @@ export const ShowcasePage: React.FC<Props> = ({ onOpenAuth, onOpenAccessDenied, 
             </div>
             <div>
               <p className="text-sm md:text-base font-bold text-blue-900 dark:text-blue-100">
-                가입 즉시 1일(24시간) 동안 실버 등급 전용 자료를 열람할 수 있습니다.
+                가입 즉시 7일 동안 실버 등급 전용 자료를 열람할 수 있습니다.
               </p>
               <p className="text-xs md:text-sm text-blue-700 dark:text-blue-300 mt-1">
                 기간이 만료되면 무료(Free) 자료만 열람 가능합니다.

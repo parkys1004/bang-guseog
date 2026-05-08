@@ -44,7 +44,7 @@ export const GuidePage: React.FC = () => {
                     방구석 작곡가에 회원가입(이메일 또는 구글 로그인)을 하시면 자동으로 <strong className="text-gray-900 dark:text-white">실버(Silver) 등급</strong>이 부여됩니다.
                   </p>
                   <ul className="list-disc list-inside space-y-2 ml-2">
-                    <li>가입 즉시 <strong className="text-gray-900 dark:text-white">1일(24시간)</strong> 동안 실버 등급 전용 자료를 열람할 수 있습니다.</li>
+                    <li>가입 즉시 <strong className="text-gray-900 dark:text-white">7일</strong> 동안 실버 등급 전용 자료를 열람할 수 있습니다.</li>
                     <li>기간이 만료되면 무료(Free) 자료만 열람 가능합니다.</li>
                     <li>추가 이용을 원하실 경우 관리자에게 문의해 주세요.</li>
                   </ul>
