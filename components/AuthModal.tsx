@@ -16,10 +16,80 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showResendBtn, setShowResendBtn] = useState(false);
-  const { login, signup, loginWithGoogle, resetPassword, resendVerificationEmail } = useAuth();
+  const { login, signup, loginWithGoogle, resetPassword, resendVerificationEmail, user, logout } = useAuth();
+
+  const handleResendVerification = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      await resendVerificationEmail(email.trim(), password);
+      setSuccess('인증 메일이 재전송되었습니다. 메일함을 확인해주세요.');
+      setShowResendBtn(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
+
+  // Custom UI for Verification Pending
+  if (isVerifying) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white dark:bg-[#11141d] rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 animate-in zoom-in-95 duration-200 p-8 flex flex-col items-center text-center">
+          <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-6">
+            <Mail className="w-10 h-10 text-blue-600 dark:text-blue-400" />
+          </div>
+          
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">이메일 인증이 필요합니다</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+            <span className="font-bold text-blue-600 dark:text-blue-400">{email}</span> 주소로 인증 메일을 보냈습니다.<br/>
+            메일함의 인증 링크를 클릭하여 가입을 완료해주세요.
+          </p>
+
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => {
+                setIsVerifying(false);
+                setIsLogin(true);
+                onClose();
+              }}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl transition-all shadow-lg shadow-blue-600/20"
+            >
+              확인
+            </button>
+            <button
+              onClick={handleResendVerification}
+              disabled={isLoading}
+              className="w-full py-3 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              인증 메일을 받지 못하셨나요? <span className="underline ml-1">재전송</span>
+            </button>
+            <button
+              onClick={async () => {
+                await logout();
+                setIsVerifying(false);
+                setIsLogin(true);
+              }}
+              className="w-full text-xs text-gray-400 hover:text-red-400 transition-colors pt-4"
+            >
+              다른 계정으로 가입하기
+            </button>
+          </div>
+
+          {(success || error) && (
+             <div className={`mt-6 text-sm font-bold ${error ? 'text-red-500' : 'text-green-500'}`}>
+               {error || success}
+             </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,37 +114,17 @@ export const AuthModal: React.FC<Props> = ({ isOpen, onClose }) => {
         const trimmedName = name.trim();
         if (!trimmedName) throw new Error('이름을 입력해주세요.');
         await signup(trimmedEmail, password, trimmedName);
-        onClose(); // Close modal on success
+        // After signup success, show verification notice instead of closing
+        setIsVerifying(true);
       }
     } catch (err: any) {
-      if (err.message === '가입하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.') {
-        setSuccess(err.message);
-        setIsLogin(true);
-        setError('');
-        setShowResendBtn(false);
+      setError(err.message || '오류가 발생했습니다.');
+      setSuccess('');
+      if (err.message.includes('이메일 인증') || err.message.includes('인증 메일')) {
+        setShowResendBtn(true);
       } else {
-        setError(err.message || '오류가 발생했습니다.');
-        setSuccess('');
-        if (err.message.includes('이메일 인증이 완료되지 않았습니다')) {
-          setShowResendBtn(true);
-        } else {
-          setShowResendBtn(false);
-        }
+        setShowResendBtn(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      await resendVerificationEmail(email.trim(), password);
-      setSuccess('인증 메일이 재전송되었습니다. 메일함을 확인해주세요.');
-      setShowResendBtn(false);
-    } catch (err: any) {
-      setError(err.message);
     } finally {
       setIsLoading(false);
     }

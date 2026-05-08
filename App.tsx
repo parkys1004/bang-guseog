@@ -19,6 +19,7 @@ import { NoticeModal } from './components/NoticeModal';
 import { UserDashboard } from './pages/UserDashboard';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdvancedMaterialsPage } from './pages/AdvancedMaterialsPage';
+import { AuthActionPage } from './pages/AuthActionPage';
 import { collection, query, where, onSnapshot, getDocFromServer, doc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,7 +38,7 @@ const testConnection = async () => {
 
 testConnection();
 
-type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials' | 'privacy' | 'terms';
+type Page = 'showcase' | 'ebook' | 'prompt' | 'service' | 'about' | 'contact' | 'faq' | 'recommended' | 'guide' | 'user-dashboard' | 'admin-dashboard' | 'advanced-materials' | 'privacy' | 'terms' | 'auth-action';
 
 const AppContent: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('showcase');
@@ -153,10 +154,11 @@ const AppContent: React.FC = () => {
       const path = window.location.pathname.replace('/', '');
       const hash = window.location.hash.replace('#', '');
       
+      const validPages = ['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide', 'auth-action'];
       // Check path first, then fallback to hash for backward compatibility
-      if (['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide'].includes(path)) {
+      if (validPages.includes(path)) {
         setActivePage(path as Page);
-      } else if (['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide'].includes(hash)) {
+      } else if (validPages.includes(hash)) {
         setActivePage(hash as Page);
       }
     };
@@ -170,9 +172,10 @@ const AppContent: React.FC = () => {
 
   // Update URL when activePage changes
   useEffect(() => {
-    if (['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide'].includes(activePage)) {
+    const validPages = ['privacy', 'terms', 'service', 'about', 'contact', 'faq', 'guide', 'auth-action'];
+    if (validPages.includes(activePage)) {
       window.history.pushState(null, '', `/${activePage}`);
-    } else if (window.location.pathname !== '/') {
+    } else if (window.location.pathname !== '/' && !window.location.pathname.includes('/auth-action')) {
       // Clear path for main pages like showcase
       window.history.pushState(null, '', '/');
     }
@@ -234,6 +237,51 @@ const AppContent: React.FC = () => {
   };
 
   const renderContent = () => {
+    // Show verification notice if user is logged in but email is not verified
+    if (user && !user.emailVerified) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center min-h-[60vh]">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-[#11141d] rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 p-8 md:p-12 max-w-xl w-full text-center"
+          >
+            <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-8 mx-auto">
+              <ShieldCheck className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+            </div>
+            
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4">이메일 인증이 완료되지 않았습니다</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 leading-relaxed text-lg">
+              가입하신 이메일 <span className="font-bold text-blue-600 dark:text-blue-400">({user.email})</span> 주소로 인증 메일을 보냈습니다.<br/>
+              메일함의 링크를 클릭하시면 모든 서비스를 이용하실 수 있습니다.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => window.location.reload()}
+                className="py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-blue-600/20"
+              >
+                인증 완료 후 새로고침
+              </button>
+              <button
+                onClick={() => setIsSettingsModalOpen(true)}
+                className="py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-black rounded-2xl transition-all"
+              >
+                인증 메일 재전송
+              </button>
+            </div>
+            
+            <button
+              onClick={() => logout()}
+              className="mt-10 text-sm font-bold text-gray-400 hover:text-red-400 transition-colors"
+            >
+              로그아웃 후 다른 계정으로 로그인
+            </button>
+          </motion.div>
+        </div>
+      );
+    }
+
     switch (activePage) {
       case 'showcase': return (
         <ShowcasePage 
@@ -255,6 +303,7 @@ const AppContent: React.FC = () => {
       case 'user-dashboard': return <UserDashboard />;
       case 'admin-dashboard': return <AdminDashboard />;
       case 'advanced-materials': return <AdvancedMaterialsPage onNavigate={setActivePage} />;
+      case 'auth-action': return <AuthActionPage />;
       default: return (
         <ShowcasePage 
           onOpenAuth={handleOpenAuth} 

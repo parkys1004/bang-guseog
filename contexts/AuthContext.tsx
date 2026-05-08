@@ -31,6 +31,7 @@ export interface User {
   subscriptionEndDate?: string | null;
   providerId?: string;
   providers?: string[];
+  emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -159,12 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 2. Check Verification (only for password provider)
-        if (!firebaseUser.emailVerified && firebaseUser.providerData[0]?.providerId === 'password') {
-          await signOut(auth);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
+        const isEmailVerified = firebaseUser.emailVerified || firebaseUser.providerData[0]?.providerId !== 'password';
 
         // 3. Check Ban Status for Verified/Social Users
         if (firebaseUser.email) {
@@ -197,7 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           tier,
           subscriptionEndDate,
           providerId: firebaseUser.providerData[0]?.providerId,
-          providers: firebaseUser.providerData.map(p => p.providerId)
+          providers: firebaseUser.providerData.map(p => p.providerId),
+          emailVerified: isEmailVerified
         });
       } else {
         setUser(null);
