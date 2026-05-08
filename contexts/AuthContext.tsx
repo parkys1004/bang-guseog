@@ -59,6 +59,106 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
+        // 1. Ensure Firestore Doc exists (even for unverified users, so admins can see them)
+        let role: 'admin' | 'user' = 'user';
+        let tier: 'free' | 'silver' | 'gold' = 'free';
+        let subscriptionEndDate: string | null = null;
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+
+        try {
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            role = userDoc.data().role || 'user';
+            tier = userDoc.data().tier || 'free';
+            subscriptionEndDate = userDoc.data().subscriptionEndDate || null;
+          } else {
+            // Check if user is in deleted_users before creating a new doc
+            let isDeleted = false;
+            if (firebaseUser.email) {
+              try {
+                const normalizedEmail = firebaseUser.email.toLowerCase();
+                const deletedUserDoc = await getDoc(doc(db, 'deleted_users', normalizedEmail));
+                if (deletedUserDoc.exists()) {
+                  const deletedAt = new Date(deletedUserDoc.data().deletedAt);
+                  const now = new Date();
+                  const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+                  if (now.getTime() - deletedAt.getTime() < sevenDaysInMillis) {
+                    isDeleted = true;
+                  }
+                }
+              } catch (e) {
+                console.error("Error checking ban status for new user doc", e);
+              }
+            }
+
+            if (!isDeleted) {
+              // Creating missing Firestore doc
+              role = firebaseUser.email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
+              tier = 'silver'; // Give silver access for 7 days
+              
+              const sevenDaysLater = new Date();
+              sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+              subscriptionEndDate = sevenDaysLater.toISOString();
+
+              await setDoc(userDocRef, {
+                email: firebaseUser.email,
+                name: firebaseUser.displayName || '사용자',
+                role: role,
+                tier: tier,
+                subscriptionEndDate,
+                createdAt: new Date().toISOString()
+              });
+
+              // Initial setup
+              let masterPassword = '';
+              try {
+                const configDoc = await getDoc(doc(db, 'config', 'globalConfig'));
+                if (configDoc.exists()) {
+                  masterPassword = configDoc.data().currentPassword || '';
+                }
+              } catch (e) {
+                console.error("Failed to get master password", e);
+              }
+
+              // Send welcome message
+              try {
+                await addDoc(collection(db, 'messages'), {
+                  title: '가입을 환영합니다!',
+                  content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 7일(실버 등급)로 자동 설정되었습니다.`,
+                  receiverId: firebaseUser.uid,
+                  senderId: 'system',
+                  senderName: '시스템 관리자',
+                  isRead: false,
+                  createdAt: new Date().toISOString()
+                });
+              } catch (e) {
+                console.error("Failed to send welcome message", e);
+              }
+
+              // Send admin notification
+              try {
+                await addDoc(collection(db, 'messages'), {
+                  title: '🎉 신규 회원 가입 알림',
+                  content: `${firebaseUser.displayName || '사용자'} (${firebaseUser.email}) 님이 새로 가입했습니다.`,
+                  receiverId: 'admin',
+                  senderId: firebaseUser.uid,
+                  senderName: '시스템 알림',
+                  isRead: false,
+                  createdAt: new Date().toISOString()
+                });
+              } catch (e) {
+                console.error("Failed to send admin notification", e);
+              }
+
+              console.log("Created missing Firestore doc for user:", firebaseUser.uid);
+            }
+          }
+        } catch (error) {
+          console.error("Error in onAuthStateChanged Firestore check:", error);
+        }
+
+        // 2. Check Verification (only for password provider)
         if (!firebaseUser.emailVerified && firebaseUser.providerData[0]?.providerId === 'password') {
           await signOut(auth);
           setUser(null);
@@ -66,6 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        // 3. Check Ban Status for Verified/Social Users
         if (firebaseUser.email) {
           try {
             const normalizedEmail = firebaseUser.email.toLowerCase();
@@ -86,127 +187,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        try {
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          let role: 'admin' | 'user' = 'user';
-          let tier: 'free' | 'silver' | 'gold' = 'free';
-          let subscriptionEndDate: string | null = null;
-          
-          if (userDoc.exists()) {
-            role = userDoc.data().role || 'user';
-            tier = userDoc.data().tier || 'free';
-            subscriptionEndDate = userDoc.data().subscriptionEndDate || null;
-          } else {
-            // First user or specific email becomes admin
-            role = firebaseUser.email === 'aimaster1004@gmail.com' ? 'admin' : 'user';
-            tier = 'silver'; // Give silver access for 1 day
-            
-            const sevenDaysLater = new Date();
-            sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
-            subscriptionEndDate = sevenDaysLater.toISOString();
-
-            await setDoc(userDocRef, {
-              email: firebaseUser.email,
-              name: firebaseUser.displayName || '사용자',
-              role: role,
-              tier: tier,
-              subscriptionEndDate,
-              createdAt: new Date().toISOString()
-            });
-
-            // Get master password
-            let masterPassword = '';
-            try {
-              const configDoc = await getDoc(doc(db, 'config', 'globalConfig'));
-              if (configDoc.exists()) {
-                masterPassword = configDoc.data().currentPassword || '';
-              }
-            } catch (e) {
-              console.error("Failed to get master password", e);
-            }
-
-            // Send welcome message
-            try {
-              await addDoc(collection(db, 'messages'), {
-                title: '가입을 환영합니다!',
-                content: `방구석 작곡가에 오신 것을 환영합니다!\n\n현재 마스터 비밀번호는 [ ${masterPassword} ] 입니다.\n사용 기간은 가입일로부터 7일로 자동 설정되었습니다.`,
-                receiverId: firebaseUser.uid,
-                senderId: 'system',
-                senderName: '시스템 관리자',
-                isRead: false,
-                createdAt: new Date().toISOString()
-              });
-            } catch (e) {
-              console.error("Failed to send welcome message", e);
-            }
-
-            // Send admin notification
-            try {
-              await addDoc(collection(db, 'messages'), {
-                title: '🎉 신규 회원 가입 알림',
-                content: `${firebaseUser.displayName || '사용자'} (${firebaseUser.email}) 님이 새로 가입했습니다.`,
-                receiverId: 'admin',
-                senderId: firebaseUser.uid,
-                senderName: '시스템 알림',
-                isRead: false,
-                createdAt: new Date().toISOString()
-              });
-            } catch (e) {
-              console.error("Failed to send admin notification", e);
-            }
-
-            // Send Discord webhook notification
-            try {
-              const webhookUrl = 'https://discord.com/api/webhooks/1490519327223582950/eQDEhqz1AbmdsSdeifBJlvQY1dcbOjnVtCsdo1gFtqX2gjwSCWTJHI4ZEEFq71zJJvtv';
-              await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  embeds: [{
-                    title: "🎉 신규 회원 가입 알림",
-                    description: "방구석 작곡가 서비스에 새로운 회원이 가입했습니다.",
-                    color: 3447003, // Blue color
-                    fields: [
-                      { name: "이름", value: firebaseUser.displayName || '사용자', inline: true },
-                      { name: "이메일", value: firebaseUser.email || '이메일 없음', inline: true }
-                    ],
-                    timestamp: new Date().toISOString()
-                  }]
-                })
-              });
-            } catch (e) {
-              console.error("Failed to send Discord notification", e);
-            }
-          }
-
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            name: firebaseUser.displayName || '사용자',
-            photoURL: firebaseUser.photoURL,
-            role,
-            tier,
-            subscriptionEndDate,
-            providerId: firebaseUser.providerData[0]?.providerId,
-            providers: firebaseUser.providerData.map(p => p.providerId)
-          });
-        } catch (error) {
-          console.error("Error fetching user role:", error);
-          // Fallback if Firestore fails (e.g. permission denied)
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            name: firebaseUser.displayName || '사용자',
-            photoURL: firebaseUser.photoURL,
-            role: 'user',
-            tier: 'free',
-            providerId: firebaseUser.providerData[0]?.providerId,
-            providers: firebaseUser.providerData.map(p => p.providerId)
-          });
-        }
+        // 4. Set User State
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || '사용자',
+          photoURL: firebaseUser.photoURL,
+          role,
+          tier,
+          subscriptionEndDate,
+          providerId: firebaseUser.providerData[0]?.providerId,
+          providers: firebaseUser.providerData.map(p => p.providerId)
+        });
       } else {
         setUser(null);
       }
@@ -368,7 +360,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('가입하신 이메일로 인증 메일이 발송되었습니다. 이메일 인증 후 로그인해주세요.');
       }
       if (error.code === 'auth/email-already-in-use') {
-        throw new Error('이미 가입된 이메일입니다.');
+        throw new Error('이미 가입된 이메일입니다. 비밀번호를 잊으셨다면 비밀번호 찾기를 이용하시거나, 이미 가입한 이력(탈퇴 포함)이 있는지 확인해주세요.');
       }
       if (error.code === 'auth/weak-password') {
         throw new Error('비밀번호는 6자리 이상이어야 합니다.');
@@ -565,11 +557,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const deleteAccount = async () => {
     if (!auth.currentUser) throw new Error('로그인이 필요합니다.');
-    
-    const uid = auth.currentUser.uid;
-    const email = auth.currentUser.email;
-    
+    const userToDelete = auth.currentUser;
+    const email = userToDelete.email;
+    const uid = userToDelete.uid;
+
     try {
+      // 1. Add to deleted_users to prevent immediate re-signup (7-day rule)
       if (email) {
         const normalizedEmail = email.toLowerCase();
         await setDoc(doc(db, 'deleted_users', normalizedEmail), {
@@ -579,11 +572,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      // Delete from Firestore first
+      // 2. Delete Firestore record while still authenticated
       await deleteDoc(doc(db, 'users', uid));
       
-      // Delete from Auth
-      await deleteUser(auth.currentUser);
+      // 3. Delete from Firebase Auth
+      try {
+        await deleteUser(userToDelete);
+      } catch (authErr: any) {
+        if (authErr.code === 'auth/requires-recent-login') {
+          // If auth deletion failed, we have a partial failure.
+          // The user is removed from Firestore but still in Auth.
+          // This will be caught below.
+          throw authErr;
+        }
+        throw authErr;
+      }
       
       setUser(null);
     } catch (error: any) {
@@ -591,7 +594,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error.code === 'auth/requires-recent-login') {
         throw new Error('보안을 위해 다시 로그인한 후 계정을 탈퇴해주세요.');
       }
-      throw new Error(`계정 탈퇴 중 오류가 발생했습니다: ${error.message}`);
+      throw new Error(`계정 탈퇴 중 오류가 발생했습니다: ${error.message || error.code}`);
     }
   };
 
