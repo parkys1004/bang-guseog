@@ -69,7 +69,7 @@ service cloud.firestore {
              data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
              data.description is string && data.description.size() < 2000 &&
              data.contentUrl is string && data.contentUrl.size() < 1000 &&
-             data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder', 'thumbnail'] &&
+             data.category in ['ebook', 'prompt', 'service', 'advanced', 'webbuilder'] &&
              data.requiredTier in ['free', 'silver', 'gold'] &&
              data.authorId == request.auth.uid &&
              data.createdAt == request.time &&
@@ -97,7 +97,7 @@ service cloud.firestore {
          incoming().tier == existing().tier &&
          incoming().createdAt == existing().createdAt)
       );
-      allow delete: if isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // Message rules
@@ -139,16 +139,35 @@ service cloud.firestore {
     }
 
     // Config rules
+    match /config/globalConfig {
+      allow read, list: if true;
+      allow write: if isAdmin();
+    }
+
     match /config/{configId} {
-      allow read: if isSignedIn();
+      allow read, list: if true; // Make config public so apps can load landing page settings
       allow write: if isAdmin();
     }
 
     // Deleted users rules
     match /deleted_users/{email} {
-      allow read: if true;
+      // Allow users to check their own ban status even during login transition
+      allow read: if isSignedIn() && (isAdmin() || request.auth.token.email.lower() == email);
+      allow list: if isAdmin();
       allow create: if isEmailVerified() && (isAdmin() || request.auth.token.email.lower() == email);
       allow update, delete: if isAdmin();
+    }
+
+    match /access_sessions/{sessionId} {
+      // Subsidiary apps can check session tokens without being logged in locally
+      allow get: if true;
+      // Users can list their own sessions for cleanup
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Only logged in users can generate session tokens
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      // Users can delete their own sessions
+      allow delete: if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+      allow update: if isAdmin();
     }
   }
 }

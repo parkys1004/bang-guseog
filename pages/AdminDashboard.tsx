@@ -45,7 +45,7 @@ export const AdminDashboard: React.FC = () => {
   const [materialUrl, setMaterialUrl] = useState('');
   const [materialImageUrl, setMaterialImageUrl] = useState('');
   const [materialPrompt, setMaterialPrompt] = useState('');
-  const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder' | 'thumbnail'>('advanced');
+  const [materialCategory, setMaterialCategory] = useState<'ebook' | 'prompt' | 'service' | 'advanced' | 'webbuilder'>('advanced');
   const [materialSubCategory, setMaterialSubCategory] = useState('');
   const [materialTier, setMaterialTier] = useState<'free' | 'silver' | 'gold'>('gold');
   const [materialOrder, setMaterialOrder] = useState<number | ''>('');
@@ -516,17 +516,17 @@ export const AdminDashboard: React.FC = () => {
   const handleUploadMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!materialTitle.trim() || !materialDescription.trim()) return;
-    if (materialCategory !== 'prompt' && materialCategory !== 'thumbnail' && !materialUrl.trim()) return;
-    if ((materialCategory === 'prompt' || materialCategory === 'thumbnail') && !materialPrompt.trim()) return;
+    if (materialCategory !== 'prompt' && !materialUrl.trim()) return;
+    if (materialCategory === 'prompt' && !materialPrompt.trim()) return;
 
     setIsUploading(true);
     try {
       await addDoc(collection(db, 'materials'), {
         title: materialTitle,
         description: materialDescription,
-        contentUrl: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? '' : materialUrl,
-        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') ? materialImageUrl : null,
-        prompt: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? materialPrompt : null,
+        contentUrl: (materialCategory === 'prompt') ? '' : materialUrl,
+        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook') ? materialImageUrl : null,
+        prompt: (materialCategory === 'prompt') ? materialPrompt : null,
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
@@ -563,8 +563,8 @@ export const AdminDashboard: React.FC = () => {
   const handleUpdateMaterial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMaterialId || !materialTitle.trim() || !materialDescription.trim()) return;
-    if (materialCategory !== 'prompt' && materialCategory !== 'thumbnail' && !materialUrl.trim()) return;
-    if ((materialCategory === 'prompt' || materialCategory === 'thumbnail') && !materialPrompt.trim()) return;
+    if (materialCategory !== 'prompt' && !materialUrl.trim()) return;
+    if (materialCategory === 'prompt' && !materialPrompt.trim()) return;
 
     setIsUploading(true);
     try {
@@ -572,9 +572,9 @@ export const AdminDashboard: React.FC = () => {
       await updateDoc(materialRef, {
         title: materialTitle,
         description: materialDescription,
-        contentUrl: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? '' : materialUrl,
-        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') ? materialImageUrl : null,
-        prompt: (materialCategory === 'prompt' || materialCategory === 'thumbnail') ? materialPrompt : null,
+        contentUrl: (materialCategory === 'prompt') ? '' : materialUrl,
+        imageUrl: (materialCategory === 'webbuilder' || materialCategory === 'ebook') ? materialImageUrl : null,
+        prompt: (materialCategory === 'prompt') ? materialPrompt : null,
         category: materialCategory,
         subCategory: materialSubCategory,
         requiredTier: materialTier,
@@ -1208,7 +1208,6 @@ export const AdminDashboard: React.FC = () => {
                   <option value="advanced">고급 자료실</option>
                   <option value="ebook">전자책</option>
                   <option value="prompt">프롬프트</option>
-                  <option value="thumbnail">썸네일 갤러리</option>
                   <option value="service">그외 자료</option>
                 </select>
               </div>
@@ -1251,14 +1250,12 @@ export const AdminDashboard: React.FC = () => {
                           m.category === 'ebook' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400' :
                           m.category === 'prompt' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' :
                           m.category === 'webbuilder' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
-                          m.category === 'thumbnail' ? 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400' :
                           'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
                         }`}>
                           {m.category === 'advanced' ? '고급 자료' : 
                            m.category === 'ebook' ? '전자책' : 
                            m.category === 'prompt' ? '프롬프트' : 
-                           m.category === 'webbuilder' ? '웹빌더앱' : 
-                           m.category === 'thumbnail' ? '썸네일 갤러리' : '그외 자료'}
+                           m.category === 'webbuilder' ? '웹빌더앱' : '그외 자료'}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium max-w-[200px] truncate" title={m.title}>
@@ -1281,7 +1278,7 @@ export const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          {(m.category === 'prompt' || m.category === 'thumbnail') ? (
+                          {m.category === 'prompt' ? (
                             <button 
                               onClick={() => showAlert(`프롬프트 내용:\n\n${m.prompt || '내용 없음'}`)}
                               className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -1467,7 +1464,7 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              {(materialCategory === 'prompt' || materialCategory === 'thumbnail') ? (
+              {materialCategory === 'prompt' ? (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">프롬프트 내용</label>
                   <textarea
@@ -1492,7 +1489,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
 
-              {(materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') && (
+              {(materialCategory === 'webbuilder' || materialCategory === 'ebook') && (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
                     <span>썸네일 이미지 <span className="text-gray-400 font-normal text-xs">(권장)</span></span>
@@ -1508,7 +1505,6 @@ export const AdminDashboard: React.FC = () => {
                       onChange={(e) => setMaterialImageUrl(e.target.value)}
                       className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-2"
                       placeholder="https://... (또는 아래에 이미지 업로드)"
-                      required={materialCategory === 'thumbnail'}
                     />
                   )}
 
@@ -1567,7 +1563,6 @@ export const AdminDashboard: React.FC = () => {
                     <option value="advanced">고급 자료실</option>
                     <option value="ebook">전자책</option>
                     <option value="prompt">프롬프트</option>
-                    <option value="thumbnail">썸네일 갤러리</option>
                     <option value="service">그외 자료</option>
                   </select>
                 </div>
@@ -1681,7 +1676,7 @@ export const AdminDashboard: React.FC = () => {
                 />
               </div>
 
-              {(materialCategory === 'prompt' || materialCategory === 'thumbnail') ? (
+              {materialCategory === 'prompt' ? (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">프롬프트 내용</label>
                   <textarea
@@ -1706,7 +1701,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
 
-              {(materialCategory === 'webbuilder' || materialCategory === 'ebook' || materialCategory === 'thumbnail') && (
+              {(materialCategory === 'webbuilder' || materialCategory === 'ebook') && (
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
                     <span>썸네일 이미지 <span className="text-gray-400 font-normal text-xs">(권장)</span></span>
@@ -1722,7 +1717,6 @@ export const AdminDashboard: React.FC = () => {
                       onChange={(e) => setMaterialImageUrl(e.target.value)}
                       className="block w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all mb-2"
                       placeholder="https://... (또는 아래에 이미지 업로드)"
-                      required={materialCategory === 'thumbnail'}
                     />
                   )}
 
@@ -1781,7 +1775,6 @@ export const AdminDashboard: React.FC = () => {
                     <option value="advanced">고급 자료실</option>
                     <option value="ebook">전자책</option>
                     <option value="prompt">프롬프트</option>
-                    <option value="thumbnail">썸네일 갤러리</option>
                     <option value="service">그외 자료</option>
                   </select>
                 </div>
